@@ -39,6 +39,9 @@ class ItemMd:
     def type_str(self, string):
         if string.startswith('Global.'):
             string = string[7:]
+        elif string.startswith(self.item['namespace']):
+            string = string[len(self.item['namespace']) + 1:]
+
         return string.replace('{', '&lt;').replace('}', '&gt;')
 
     def markdown(self):
@@ -89,7 +92,7 @@ class ItemMd:
         if inheritance is not None:
             result += 'Inheritance\n'
             for inherit in inheritance:
-                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(inherit))
+                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.type_str(inherit)))
                 inherit_depth += 2
             result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.item['name']))
 
@@ -98,7 +101,7 @@ class ItemMd:
             if inherit_depth != 0:
                 inherit_depth += 2
             for classname in derived_classes:
-                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(classname))
+                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.type_str(classname)))
             result += '\n'
 
         return result if len(result) != 0 else None
@@ -110,7 +113,7 @@ class ItemMd:
 
         result = 'Inherited Members\n'
         for member in inherited_members:
-            result += '- ' + text_to_md(member) + '\n'
+            result += '- ' + text_to_md(self.type_str(member)) + '\n'
         return result + '\n'
 
     def namespace(self):
@@ -215,7 +218,7 @@ class ItemMd:
 
         result += '\n```%s\n' % lang
         result += syntax[content_key]
-        result += '\n```\n'
+        result += '\n```\n\n'
 
         parameters = self.parameters()
         if parameters is not None:
