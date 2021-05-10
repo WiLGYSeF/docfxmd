@@ -112,7 +112,7 @@ def docfx_to_md(data):
             if item_type == TYPE_CLASS:
                 item_md.append('# Class %s' % name)
             elif item_type == TYPE_CONSTRUCTOR:
-                item_md.append('## **Constructor**')
+                item_md.append('## **Constructors**')
             elif item_type == TYPE_FIELD:
                 item_md.append('## **Fields**')
             elif item_type == TYPE_PROPERTY:
@@ -166,7 +166,7 @@ def docfx_to_md(data):
 
             assemblies = item.get('assemblies')
             if assemblies is not None:
-                item_md.append('Assemblies:')
+                item_md.append('Assembly:')
                 for asm in assemblies:
                     item_md.append('- ' + asm)
                 item_md.append('')
