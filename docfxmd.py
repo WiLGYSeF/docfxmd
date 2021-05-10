@@ -191,7 +191,7 @@ def docfx_to_md(data):
                     item_md.append('| Type | Name | Description |')
                     item_md.append('|---|---|---|')
                     for param in parameters:
-                        item_md.append('| %s | %s | %s |' % (
+                        item_md.append('| %s | *%s* | %s |' % (
                             type_str(param['type']),
                             param['id'],
                             param.get('description', ''),
@@ -200,7 +200,7 @@ def docfx_to_md(data):
                     item_md.append('| Type | Name |')
                     item_md.append('|---|---|')
                     for param in parameters:
-                        item_md.append('| %s | %s |' % (
+                        item_md.append('| %s | *%s* |' % (
                             type_str(param['type']),
                             param['id'],
                         ))
