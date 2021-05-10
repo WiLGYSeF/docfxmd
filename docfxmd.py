@@ -40,6 +40,9 @@ def text_to_md(data):
     result = result.replace('*', r'\*')
     return result
 
+def text_to_md_table(data):
+    return text_to_md(data).strip().replace('\n', '<br/>').replace('|', r'\|')
+
 def html_to_md(data):
     result = ''
     open_tags = []
@@ -208,7 +211,7 @@ def docfx_to_md(data):
                         item_md.append('| %s | *%s* | %s |' % (
                             type_str(param['type']),
                             text_to_md(param['id']),
-                            html_to_md(param.get('description', '')).strip().replace('\n', '<br/>'),
+                            html_to_md(text_to_md_table(param.get('description', ''))),
                         ))
                 else:
                     item_md.append('| Type | Name |')
@@ -235,7 +238,7 @@ def docfx_to_md(data):
                     item_md.append('|---|---|')
                     item_md.append('| %s | %s |' % (
                         type_str(return_result['type']),
-                        html_to_md(return_result['description']).strip().replace('\n', '<br/>')
+                        html_to_md(text_to_md_table(return_result['description'])),
                     ))
                 else:
                     item_md.append('| Type |')
