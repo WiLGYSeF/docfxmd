@@ -112,7 +112,7 @@ def docfx_to_md(data):
             if item_type == TYPE_CLASS:
                 item_md.append('# Class %s' % name)
             elif item_type == TYPE_CONSTRUCTOR:
-                item_md.append('## **Constructors**')
+                item_md.append('## Constructors')
             elif item_type == TYPE_FIELD:
                 item_md.append('## **Fields**')
             elif item_type == TYPE_PROPERTY:
@@ -122,7 +122,7 @@ def docfx_to_md(data):
             item_md.append('')
             type_headers.add(item_type)
 
-        if item_type in (TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
+        if item_type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
             item_md.append('### ' + item['name'])
             item_md.append('')
 
@@ -201,7 +201,7 @@ def docfx_to_md(data):
                         item_md.append('| %s | *%s* | %s |' % (
                             type_str(param['type']),
                             param['id'],
-                            param.get('description', ''),
+                            param.get('description', '').strip().replace('\n', '<br/>'),
                         ))
                 else:
                     item_md.append('| Type | Name |')
@@ -211,6 +211,7 @@ def docfx_to_md(data):
                             type_str(param['type']),
                             param['id'],
                         ))
+                item_md.append('')
 
             return_result = syntax.get('return')
             if return_result is not None:
@@ -227,12 +228,13 @@ def docfx_to_md(data):
                     item_md.append('|---|---|')
                     item_md.append('| %s | %s |' % (
                         type_str(return_result['type']),
-                        html_to_md(return_result['description'])
+                        html_to_md(return_result['description']).strip().replace('\n', '<br/>')
                     ))
                 else:
                     item_md.append('| Type |')
                     item_md.append('|---|')
                     item_md.append('| %s |' % type_str(return_result['type']))
+                item_md.append('')
 
         remarks = item.get('remarks')
         if remarks is not None:
@@ -241,6 +243,7 @@ def docfx_to_md(data):
             item_md.append(html_to_md(remarks))
             item_md.append('')
 
+        item_md.append('')
         markdown.append(item_md)
 
     result = ''
