@@ -122,10 +122,7 @@ def docfx_to_md(data):
             item_md.append('')
             type_headers.add(item_type)
 
-        if item_type in (TYPE_FIELD, TYPE_PROPERTY):
-            item_md.append('### ' + item['id'])
-            item_md.append('')
-        elif item_type == TYPE_METHOD:
+        if item_type in (TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
             item_md.append('### ' + item['name'])
             item_md.append('')
 
