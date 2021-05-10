@@ -2,6 +2,8 @@
 
 import functools
 import json
+import os
+
 from lxml import etree
 
 import yaml
@@ -27,15 +29,20 @@ def build_index(arr):
     return index
 
 def html_to_md(data):
+    # TODO: <p>, <pre><code>, etc...
     result = ''
     doc = etree.HTML(data)
     for ele in doc[0]:
-        result += ele.text
+        if ele.text is not None:
+            result += ele.text
     return result
 
 def docfx_to_md(data):
+    if not isinstance(data, dict) or 'items' not in data:
+        return None
+
     markdown = []
-    items = data['items']
+    items = data.get('items')
 
     type_order = build_index([
         TYPE_CLASS,
@@ -155,7 +162,7 @@ def docfx_to_md(data):
                         item_md.append('| %s | %s | %s |' % (
                             param['type'],
                             param['id'],
-                            param['description'],
+                            param.get('description', ''),
                         ))
                 else:
                     item_md.append('| Type | Name |')
@@ -197,11 +204,30 @@ def docfx_to_md(data):
         result += '\n'.join(item) + '\n'
     return result
 
+def build_directory(dname, output_name):
+    for root, dirs, files in os.walk(dname):
+        for fname in files:
+            if not fname.endswith('.yml'):
+                continue
+
+            path = os.path.join(root, fname)
+            print(path)
+            result = docfx_to_md(load_file(path))
+
+            outpath = os.path.join(output_name, root)
+            continue
+            os.makedirs(outpath,exist_ok=True)
+            with open(outpath, 'w') as file:
+                file.write(result)
+
 def load_file(fname):
-    with open(fname, 'r') as file:
-        return yaml.load(file.read(), Loader=yaml.Loader)
+    with open(fname, 'r', encoding='utf-8') as file:
+        return yaml.load(file, Loader=yaml.Loader)
 
 if __name__ == '__main__':
+    build_directory('api', 'output')
+    exit(0)
+
     result = docfx_to_md(load_file('test.yml'))
     with open('test.md', 'w') as file:
         file.write(result)
