@@ -71,11 +71,72 @@ class ItemMd:
 
         return 'Namespace: %s\n' % text_to_md(namespace)
 
+    def parameters(self):
+        if 'syntax' not in self.item:
+            return None
+
+        parameters = self.item['syntax'].get('parameters')
+        if parameters is None or len(parameters) == 0:
+            return None
+
+        result = 'Parameters\n'
+        has_description = any(map(lambda x: 'description' in x, parameters))
+
+        if has_description:
+            result += '\n| Type | Name | Description |\n'
+            result += '|---|---|---|\n'
+            for param in parameters:
+                result += '| %s | *%s* | %s |\n' % (
+                    self.type_str(param['type']),
+                    text_to_md(param['id']),
+                    html_to_md(text_to_md_table(param.get('description', ''))),
+                )
+        else:
+            result += '\n| Type | Name |\n'
+            result += '|---|---|\n'
+            for param in parameters:
+                result += '| %s | *%s* |\n' % (
+                    self.type_str(param['type']),
+                    text_to_md(param['id']),
+                )
+
+        return result + '\n'
+
     def remarks(self):
         remarks = self.item.get('remarks')
         if remarks is None:
             return None
         return 'Remarks\n\n%s\n' % html_to_md(remarks)
+
+    def return_(self):
+        if 'syntax' not in self.item:
+            return None
+
+        return_result = self.item['syntax'].get('return')
+        if return_result is None:
+            return None
+
+        result = ''
+        if self.type == TYPE_FIELD:
+            result += 'Field Value\n'
+        elif self.type == TYPE_PROPERTY:
+            result += 'Property Value\n'
+        else:
+            result += 'Returns\n'
+
+        if 'description' in return_result:
+            result += '\n| Type | Description |\n'
+            result += '|---|---|\n'
+            result += '| %s | %s |\n' % (
+                self.type_str(return_result['type']),
+                html_to_md(text_to_md_table(return_result['description'])),
+            )
+        else:
+            result += '\n| Type |\n'
+            result += '|---|\n'
+            result += '| %s |\n' % self.type_str(return_result['type'])
+
+        return result
 
     def summary(self):
         summary = self.item.get('summary')
@@ -107,50 +168,12 @@ class ItemMd:
         result += syntax[content_key]
         result += '\n```\n'
 
-        parameters = syntax.get('parameters')
-        if parameters is not None and len(parameters) != 0:
-            has_description = any(map(lambda x: 'description' in x, parameters))
-            result += 'Parameters\n'
-            if has_description:
-                result += '\n| Type | Name | Description |\n'
-                result += '|---|---|---|\n'
-                for param in parameters:
-                    result += '| %s | *%s* | %s |\n' % (
-                        self.type_str(param['type']),
-                        text_to_md(param['id']),
-                        html_to_md(text_to_md_table(param.get('description', ''))),
-                    )
-            else:
-                result += '\n| Type | Name |\n'
-                result += '|---|---|\n'
-                for param in parameters:
-                    result += '| %s | *%s* |\n' % (
-                        self.type_str(param['type']),
-                        text_to_md(param['id']),
-                    )
-            result += '\n'
+        parameters = self.parameters()
+        if parameters is not None:
+            result += parameters
 
-        return_result = syntax.get('return')
-        if return_result is None:
-            return result
-
-        if self.type == TYPE_FIELD:
-            result += 'Field Value\n'
-        elif self.type == TYPE_PROPERTY:
-            result += 'Property Value\n'
-        else:
-            result += 'Returns\n'
-
-        if 'description' in return_result:
-            result += '\n| Type | Description |\n'
-            result += '|---|---|\n'
-            result += '| %s | %s |\n' % (
-                self.type_str(return_result['type']),
-                html_to_md(text_to_md_table(return_result['description'])),
-            )
-        else:
-            result += '\n| Type |\n'
-            result += '|---|\n'
-            result += '| %s |\n' % self.type_str(return_result['type'])
+        return_result = self.return_()
+        if return_result is not None:
+            result += return_result
 
         return result + '\n'
