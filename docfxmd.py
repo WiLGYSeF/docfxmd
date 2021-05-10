@@ -7,6 +7,12 @@ from lxml import etree
 import yaml
 
 
+TYPE_CLASS = 'class'
+TYPE_CONSTRUCTOR = 'constructor'
+TYPE_FIELD = 'field'
+TYPE_PROPERTY = 'property'
+TYPE_METHOD = 'method'
+
 LANG_CS = 'cs'
 LANG_VB = 'vb'
 LANG = LANG_CS
@@ -32,11 +38,11 @@ def docfx_to_md(data):
     items = data['items']
 
     type_order = build_index([
-        'class',
-        'constructor',
-        'field',
-        'property',
-        'method'
+        TYPE_CLASS,
+        TYPE_CONSTRUCTOR,
+        TYPE_FIELD,
+        TYPE_PROPERTY,
+        TYPE_METHOD,
     ])
 
     def cmp(a, b): #pylint: disable=invalid-name
@@ -61,23 +67,23 @@ def docfx_to_md(data):
         name = item['name']
 
         if item_type not in type_headers:
-            if item_type == 'class':
+            if item_type == TYPE_CLASS:
                 item_md.append('# Class %s' % name)
-            elif item_type == 'constructor':
+            elif item_type == TYPE_CONSTRUCTOR:
                 item_md.append('## **Constructor**')
-            elif item_type == 'field':
+            elif item_type == TYPE_FIELD:
                 item_md.append('## **Fields**')
-            elif item_type == 'property':
+            elif item_type == TYPE_PROPERTY:
                 item_md.append('## **Properties**')
-            elif item_type == 'method':
+            elif item_type == TYPE_METHOD:
                 item_md.append('## **Methods**')
             item_md.append('')
             type_headers.add(item_type)
 
-        if item_type in ('field', 'property'):
+        if item_type in (TYPE_FIELD, TYPE_PROPERTY):
             item_md.append('### ' + item['id'])
             item_md.append('')
-        elif item_type == 'method':
+        elif item_type == TYPE_METHOD:
             item_md.append('### ' + item['name'])
             item_md.append('')
 
@@ -106,7 +112,7 @@ def docfx_to_md(data):
                 item_md.append('- ' + member)
             item_md.append('')
 
-        if item_type == 'class':
+        if item_type == TYPE_CLASS:
             namespace = item.get('namespace')
             if namespace is not None:
                 item_md.append('Namespace: ' + namespace)
@@ -121,7 +127,7 @@ def docfx_to_md(data):
 
         syntax = item.get('syntax')
         if syntax is not None:
-            if item_type == 'class':
+            if item_type == TYPE_CLASS:
                 item_md.append('Syntax')
             else:
                 item_md.append('Declaration')
@@ -159,7 +165,7 @@ def docfx_to_md(data):
 
             return_result = syntax.get('return')
             if return_result is not None:
-                if item_type == 'property':
+                if item_type == TYPE_PROPERTY:
                     item_md.append('Property Value')
                 else:
                     item_md.append('Returns')
