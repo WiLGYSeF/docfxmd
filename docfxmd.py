@@ -202,7 +202,9 @@ def docfx_to_md(data):
 
             return_result = syntax.get('return')
             if return_result is not None:
-                if item_type == TYPE_PROPERTY:
+                if item_type == TYPE_FIELD:
+                    item_md.append('Field Value')
+                elif item_type == TYPE_PROPERTY:
                     item_md.append('Property Value')
                 else:
                     item_md.append('Returns')
