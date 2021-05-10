@@ -11,9 +11,28 @@ LANG_VB = 'vb'
 LANG = LANG_CS
 
 
+def build_index(arr):
+    index = {}
+    count = 0
+    for val in arr:
+        index[val] = count
+        count += 1
+    return index
+
 def docfx_to_md(data):
     markdown = []
-    for item in data['items']:
+    items = data['items']
+
+    type_order = build_index([
+        'class',
+        'constructor',
+        'field',
+        'method'
+    ])
+
+    items.sort(key=lambda x: type_order.get(x['type'].lower(), 9999))
+
+    for item in items:
         print(json.dumps(item, indent=4))
 
         item_md = []
