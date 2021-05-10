@@ -29,12 +29,9 @@ class DocfxMd:
 
             item_mdlist = []
 
-            uid = item.item['uid']
-            name = item.item['name']
-
             if item.type not in type_headers:
                 if item.type == TYPE_CLASS:
-                    item_mdlist.append('# Class %s' % text_to_md(name))
+                    item_mdlist.append('# Class %s' % text_to_md(item.name))
                 elif item.type == TYPE_CONSTRUCTOR:
                     item_mdlist.append('## Constructors')
                 elif item.type == TYPE_FIELD:
@@ -47,7 +44,7 @@ class DocfxMd:
                 type_headers.add(item.type)
 
             if item.type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
-                item_mdlist.append('### ' + text_to_md(name))
+                item_mdlist.append('### ' + text_to_md(item.name))
                 item_mdlist.append('')
 
             item_mdlist.append(item.markdown())

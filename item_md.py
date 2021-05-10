@@ -29,6 +29,9 @@ LANG = LANG_CS
 class ItemMd:
     def __init__(self, item):
         self.item = item
+        self.uid = item['uid']
+        self.id = item['id']
+        self.name = item['name']
         self.type = item['type'].lower()
 
         self.type_order = TYPE_ORDER.get(self.type, 9999)
@@ -64,12 +67,11 @@ class ItemMd:
     def _cmp(self, other):
         if self.type_order != other.type_order:
             return self.type_order - other.type_order
-        if self.item['id'] > other.item['id']:
+        if self.id > other.id:
             return 1
-        elif self.item['id'] < other.item['id']:
+        if self.id < other.id:
             return -1
-        else:
-            return 0
+        return 0
 
     # --------
 
