@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import functools
 import json
 from lxml import etree
 
@@ -38,7 +39,15 @@ def docfx_to_md(data):
         'method'
     ])
 
-    items.sort(key=lambda x: type_order.get(x['type'].lower(), 9999))
+    def cmp(a, b):
+        atype = type_order.get(a['type'].lower(), 9999)
+        btype = type_order.get(b['type'].lower(), 9999)
+
+        if atype != btype:
+            return atype - btype
+        return 1 if a['id'] >= b['id'] else -1
+
+    items.sort(key=functools.cmp_to_key(cmp))
 
     for item in items:
         print(json.dumps(item, indent=4))
