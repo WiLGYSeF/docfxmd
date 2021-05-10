@@ -7,6 +7,20 @@ TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
 TYPE_METHOD = 'method'
 
+def build_index(arr):
+    index = {}
+    for val in arr:
+        index[val] = len(index)
+    return index
+
+TYPE_ORDER = build_index([
+    TYPE_CLASS,
+    TYPE_CONSTRUCTOR,
+    TYPE_FIELD,
+    TYPE_PROPERTY,
+    TYPE_METHOD,
+])
+
 LANG_CS = 'cs'
 LANG_VB = 'vb'
 LANG = LANG_CS
@@ -16,6 +30,8 @@ class ItemMd:
     def __init__(self, item):
         self.item = item
         self.type = item['type'].lower()
+
+        self.type_order = TYPE_ORDER.get(self.type, 9999)
 
     def type_str(self, string):
         if string.startswith('Global.'):
@@ -35,6 +51,25 @@ class ItemMd:
         md_list.append(self.remarks())
 
         return '\n'.join(filter(lambda x: x is not None, md_list))
+
+    def __gt__(self, other):
+        return self._cmp(other) > 0
+
+    def __le__(self, other):
+        return self._cmp(other) < 0
+
+    def __eq__(self, other):
+        return self._cmp(other) == 0
+
+    def _cmp(self, other):
+        if self.type_order != other.type_order:
+            return self.type_order - other.type_order
+        if self.item['id'] > other.item['id']:
+            return 1
+        elif self.item['id'] < other.item['id']:
+            return -1
+        else:
+            return 0
 
     # --------
 
