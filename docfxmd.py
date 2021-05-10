@@ -3,11 +3,14 @@
 import functools
 import json
 import os
-
-from lxml import etree
+import re
 
 import yaml
 
+
+TAG_CODE = 'code'
+
+TAG_REGEX = re.compile(r'<(/?)([A-Za-z]+)>')
 
 TYPE_CLASS = 'class'
 TYPE_CONSTRUCTOR = 'constructor'
@@ -29,12 +32,37 @@ def build_index(arr):
     return index
 
 def html_to_md(data):
-    # TODO: <p>, <pre><code>, etc...
     result = ''
-    doc = etree.HTML(data)
-    for ele in doc[0]:
-        if ele.text is not None:
-            result += ele.text
+    open_tags = []
+    last = 0
+
+    for match in TAG_REGEX.finditer(data):
+        if match[1] == '':
+            prev_tag = open_tags[-1].lower() if len(open_tags) != 0 else None
+            tag = match[2].lower()
+
+            if prev_tag == TAG_CODE:
+                result += '`%s`' % data[last:match.start()]
+            else:
+                result += data[last:match.start()]
+            last = match.end()
+            open_tags.append(match[2])
+        else:
+            prev_tag = open_tags.pop().lower()
+            tag = match[2].lower()
+            if prev_tag != tag:
+                raise ValueError()
+
+            prev_tag = open_tags[-1].lower() if len(open_tags) != 0 else None
+            tag = match[2].lower()
+
+            if tag == TAG_CODE:
+                result += '`%s`' % data[last:match.start()]
+            else:
+                result += data[last:match.start()]
+            last = match.end()
+
+    result += data[last:]
     return result
 
 def docfx_to_md(data):
