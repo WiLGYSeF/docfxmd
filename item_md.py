@@ -79,11 +79,7 @@ class ItemMd:
         assemblies = self.item.get('assemblies')
         if assemblies is None:
             return None
-
-        result = 'Assembly:\n'
-        for asm in assemblies:
-            result += '- %s\n' % text_to_md(asm)
-        return result + '\n'
+        return '**Assembly**: %s\n' % text_to_md(','.join(assemblies))
 
     def inheritance(self):
         result = ''
@@ -122,7 +118,7 @@ class ItemMd:
         if namespace is None:
             return None
 
-        return 'Namespace: %s\n' % text_to_md(namespace)
+        return '**Namespace**: %s\n' % text_to_md(namespace)
 
     def parameters(self):
         if 'syntax' not in self.item:
