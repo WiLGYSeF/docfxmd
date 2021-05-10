@@ -36,7 +36,8 @@ class ItemMd:
 
         self.type_order = TYPE_ORDER.get(self.type, 9999)
 
-    def type_str(self, string):
+    def obj_str(self, string):
+
         if string.startswith('Global.'):
             string = string[7:]
         elif string.startswith(self.item['namespace']):
@@ -92,7 +93,7 @@ class ItemMd:
         if inheritance is not None:
             result += 'Inheritance\n'
             for inherit in inheritance:
-                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.type_str(inherit)))
+                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.obj_str(inherit)))
                 inherit_depth += 2
             result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.item['name']))
 
@@ -101,7 +102,7 @@ class ItemMd:
             if inherit_depth != 0:
                 inherit_depth += 2
             for classname in derived_classes:
-                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.type_str(classname)))
+                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.obj_str(classname)))
             result += '\n'
 
         return result if len(result) != 0 else None
@@ -113,7 +114,7 @@ class ItemMd:
 
         result = 'Inherited Members\n'
         for member in inherited_members:
-            result += '- ' + text_to_md(self.type_str(member)) + '\n'
+            result += '- ' + text_to_md(self.obj_str(member)) + '\n'
         return result + '\n'
 
     def namespace(self):
@@ -139,7 +140,7 @@ class ItemMd:
             result += '|---|---|---|\n'
             for param in parameters:
                 result += '| %s | *%s* | %s |\n' % (
-                    self.type_str(param['type']),
+                    self.obj_str(param['type']),
                     text_to_md(param['id']),
                     html_to_md(text_to_md_table(param.get('description', ''))),
                 )
@@ -148,7 +149,7 @@ class ItemMd:
             result += '|---|---|\n'
             for param in parameters:
                 result += '| %s | *%s* |\n' % (
-                    self.type_str(param['type']),
+                    self.obj_str(param['type']),
                     text_to_md(param['id']),
                 )
 
@@ -180,13 +181,13 @@ class ItemMd:
             result += '\n| Type | Description |\n'
             result += '|---|---|\n'
             result += '| %s | %s |\n' % (
-                self.type_str(return_result['type']),
+                self.obj_str(return_result['type']),
                 html_to_md(text_to_md_table(return_result['description'])),
             )
         else:
             result += '\n| Type |\n'
             result += '|---|\n'
-            result += '| %s |\n' % self.type_str(return_result['type'])
+            result += '| %s |\n' % self.obj_str(return_result['type'])
 
         return result
 
