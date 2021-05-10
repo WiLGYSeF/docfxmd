@@ -195,13 +195,13 @@ def docfx_to_md(data):
     result = ''
     for item in markdown:
         result += '\n'.join(item) + '\n'
-
-    with open('test.md', 'w') as file:
-        file.write(result)
+    return result
 
 def load_file(fname):
     with open(fname, 'r') as file:
         return yaml.load(file.read(), Loader=yaml.Loader)
 
 if __name__ == '__main__':
-    docfx_to_md(load_file('test.yml'))
+    result = docfx_to_md(load_file('test.yml'))
+    with open('test.md', 'w') as file:
+        file.write(result)
