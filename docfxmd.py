@@ -131,17 +131,24 @@ def docfx_to_md(data):
             item_md.append(html_to_md(summary))
             item_md.append('')
 
+        inherit_depth = 0
+
         inheritance = item.get('inheritance')
         if inheritance is not None:
             item_md.append('Inheritance:')
             for inherit in inheritance:
-                item_md.append('- ' + inherit)
+                item_md.append('%s- %s' % ('  ' * inherit_depth, inherit))
+                inherit_depth += 2
+            item_md.append('%s- %s' % ('  ' * inherit_depth, item['name']))
             item_md.append('')
 
         derived_classes = item.get('derivedClasses')
         if derived_classes is not None:
-            for cls in derived_classes:
-                item_md.append('- ' + cls)
+            if inherit_depth != 0:
+                inherit_depth += 2
+
+            for classname in derived_classes:
+                item_md.append('%s- %s' % ('  ' * inherit_depth, classname))
             item_md.append('')
 
         inherited_members = item.get('inheritedMembers')
