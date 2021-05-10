@@ -3,7 +3,9 @@
 import functools
 import json
 import os
+import pathlib
 import re
+import sys
 
 import yaml
 
@@ -238,24 +240,25 @@ def build_directory(dname, output_name):
             if not fname.endswith('.yml'):
                 continue
 
-            path = os.path.join(root, fname)
-            print(path)
-            result = docfx_to_md(load_file(path))
+            in_path = os.path.join(root, fname)
+            result = docfx_to_md(load_file(in_path))
+            if result is None:
+                continue
 
-            outpath = os.path.join(output_name, root)
-            continue
-            os.makedirs(outpath,exist_ok=True)
-            with open(outpath, 'w') as file:
+            path = pathlib.Path(in_path)
+            out_path = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
+
+            os.makedirs(out_path.parent, exist_ok=True)
+            with open(out_path.with_suffix('.md'), 'w', encoding='utf-8') as file:
                 file.write(result)
 
 def load_file(fname):
     with open(fname, 'r', encoding='utf-8') as file:
         return yaml.load(file, Loader=yaml.Loader)
 
-if __name__ == '__main__':
+def main(args):
     build_directory('api', 'output')
-    exit(0)
 
-    result = docfx_to_md(load_file('test.yml'))
-    with open('test.md', 'w') as file:
-        file.write(result)
+
+if __name__ == '__main__':
+    main(sys.argv)
