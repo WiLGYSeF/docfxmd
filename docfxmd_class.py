@@ -72,24 +72,12 @@ class DocfxMd:
                 item_mdlist.append('### ' + text_to_md(item['name']))
                 item_mdlist.append('')
 
-            item_mdlist.append(item_md.summary())
-
-            item_mdlist.append(item_md.inheritance())
-            item_mdlist.append(item_md.inherited_members())
-
-            if item_type == TYPE_CLASS:
-                item_mdlist.append(item_md.namespace())
-                item_mdlist.append(item_md.assemblies())
-
-            item_mdlist.append(item_md.syntax())
-            item_mdlist.append(item_md.remarks())
-
-            item_mdlist.append('')
+            item_mdlist.append(item_md.markdown())
             markdown.append(item_mdlist)
 
         result = ''
         for item in markdown:
-            result += '\n'.join(filter(lambda x: x is not None, item)) + '\n'
+            result += '\n'.join(item) + '\n'
         return result
 
 def build_index(arr):

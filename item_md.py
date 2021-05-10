@@ -22,6 +22,22 @@ class ItemMd:
             string = string[7:]
         return string.replace('{', '&lt;').replace('}', '&gt;')
 
+    def markdown(self):
+        md_list = []
+
+        md_list.append(self.summary())
+        md_list.append(self.inheritance())
+        md_list.append(self.inherited_members())
+        if self.type == TYPE_CLASS:
+            md_list.append(self.namespace())
+            md_list.append(self.assemblies())
+        md_list.append(self.syntax())
+        md_list.append(self.remarks())
+
+        return '\n'.join(filter(lambda x: x is not None, md_list))
+
+    # --------
+
     def assemblies(self):
         assemblies = self.item.get('assemblies')
         if assemblies is None:
