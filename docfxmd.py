@@ -39,7 +39,7 @@ def docfx_to_md(data):
         'method'
     ])
 
-    def cmp(a, b):
+    def cmp(a, b): #pylint: disable=invalid-name
         atype = type_order.get(a['type'].lower(), 9999)
         btype = type_order.get(b['type'].lower(), 9999)
 
@@ -81,6 +81,12 @@ def docfx_to_md(data):
             item_md.append('Inheritance:')
             for inherit in inheritance:
                 item_md.append('- ' + inherit)
+            item_md.append('')
+
+        derived_classes = item.get('derivedClasses')
+        if derived_classes is not None:
+            for cls in derived_classes:
+                item_md.append('- ' + cls)
             item_md.append('')
 
         inherited_members = item.get('inheritedMembers')
