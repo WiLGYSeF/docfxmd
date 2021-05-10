@@ -49,6 +49,8 @@ def docfx_to_md(data):
 
     items.sort(key=functools.cmp_to_key(cmp))
 
+    type_headers = set()
+
     for item in items:
         print(json.dumps(item, indent=4))
 
@@ -58,13 +60,21 @@ def docfx_to_md(data):
         item_type = item['type'].lower()
         name = item['name']
 
-        if item_type == 'class':
-            item_md.append('# Class %s' % name)
+        if item_type not in type_headers:
+            if item_type == 'class':
+                item_md.append('# Class %s' % name)
+            elif item_type == 'constructor':
+                item_md.append('## **Constructor**')
+            elif item_type == 'field':
+                item_md.append('## **Fields**')
+            elif item_type == 'property':
+                item_md.append('## **Properties**')
+            elif item_type == 'method':
+                item_md.append('## **Methods**')
             item_md.append('')
-        elif item_type == 'constructor':
-            item_md.append('## Constructor')
-            item_md.append('')
-        elif item_type in ('field', 'property'):
+            type_headers.add(item_type)
+
+        if item_type in ('field', 'property'):
             item_md.append('### ' + item['id'])
             item_md.append('')
         elif item_type == 'method':
@@ -169,7 +179,6 @@ def docfx_to_md(data):
 
         remarks = item.get('remarks')
         if remarks is not None:
-            doc = etree.HTML(remarks)
             item_md.append('Remarks')
             item_md.append('')
             item_md.append(html_to_md(remarks))
