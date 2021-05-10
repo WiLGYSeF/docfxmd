@@ -67,6 +67,11 @@ def html_to_md(data):
     result += data[last:]
     return result
 
+def type_str(string):
+    if string.startswith('Global.'):
+        string = string[7:]
+    return string.replace('{', '&lt;').replace('}', '&gt;')
+
 def docfx_to_md(data):
     if not isinstance(data, dict) or 'items' not in data:
         return None
@@ -190,7 +195,7 @@ def docfx_to_md(data):
                     item_md.append('|---|---|---|')
                     for param in parameters:
                         item_md.append('| %s | %s | %s |' % (
-                            param['type'],
+                            type_str(param['type']),
                             param['id'],
                             param.get('description', ''),
                         ))
@@ -198,7 +203,10 @@ def docfx_to_md(data):
                     item_md.append('| Type | Name |')
                     item_md.append('|---|---|')
                     for param in parameters:
-                        item_md.append('| %s | %s |' % (param['type'], param['id']))
+                        item_md.append('| %s | %s |' % (
+                            type_str(param['type']),
+                            param['id'],
+                        ))
 
             return_result = syntax.get('return')
             if return_result is not None:
@@ -214,13 +222,13 @@ def docfx_to_md(data):
                     item_md.append('| Type | Description |')
                     item_md.append('|---|---|')
                     item_md.append('| %s | %s |' % (
-                        return_result['type'],
+                        type_str(return_result['type']),
                         html_to_md(return_result['description'])
                     ))
                 else:
                     item_md.append('| Type |')
                     item_md.append('|---|')
-                    item_md.append('| %s |' % return_result['type'])
+                    item_md.append('| %s |' % type_str(return_result['type']))
 
         remarks = item.get('remarks')
         if remarks is not None:
