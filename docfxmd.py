@@ -33,6 +33,13 @@ def build_index(arr):
         count += 1
     return index
 
+def text_to_md(data):
+    # TODO: better escapes
+    result = data
+    result = result.replace('_', r'\_')
+    result = result.replace('*', r'\*')
+    return result
+
 def html_to_md(data):
     result = ''
     open_tags = []
@@ -46,7 +53,7 @@ def html_to_md(data):
             if prev_tag == TAG_CODE:
                 result += '`%s`' % data[last:match.start()]
             else:
-                result += data[last:match.start()]
+                result += text_to_md(data[last:match.start()])
             last = match.end()
             open_tags.append(match[2])
         else:
@@ -61,10 +68,10 @@ def html_to_md(data):
             if tag == TAG_CODE:
                 result += '`%s`' % data[last:match.start()]
             else:
-                result += data[last:match.start()]
+                result += text_to_md(data[last:match.start()])
             last = match.end()
 
-    result += data[last:]
+    result += text_to_md(data[last:])
     return result
 
 def type_str(string):
@@ -110,7 +117,7 @@ def docfx_to_md(data):
 
         if item_type not in type_headers:
             if item_type == TYPE_CLASS:
-                item_md.append('# Class %s' % name)
+                item_md.append('# Class %s' % text_to_md(name))
             elif item_type == TYPE_CONSTRUCTOR:
                 item_md.append('## Constructors')
             elif item_type == TYPE_FIELD:
@@ -123,7 +130,7 @@ def docfx_to_md(data):
             type_headers.add(item_type)
 
         if item_type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
-            item_md.append('### ' + item['name'])
+            item_md.append('### ' + text_to_md(item['name']))
             item_md.append('')
 
         summary = item.get('summary')
@@ -137,9 +144,9 @@ def docfx_to_md(data):
         if inheritance is not None:
             item_md.append('Inheritance:')
             for inherit in inheritance:
-                item_md.append('%s- %s' % ('  ' * inherit_depth, inherit))
+                item_md.append('%s- %s' % ('  ' * inherit_depth, text_to_md(inherit)))
                 inherit_depth += 2
-            item_md.append('%s- %s' % ('  ' * inherit_depth, item['name']))
+            item_md.append('%s- %s' % ('  ' * inherit_depth, text_to_md(item['name'])))
             item_md.append('')
 
         derived_classes = item.get('derivedClasses')
@@ -148,27 +155,27 @@ def docfx_to_md(data):
                 inherit_depth += 2
 
             for classname in derived_classes:
-                item_md.append('%s- %s' % ('  ' * inherit_depth, classname))
+                item_md.append('%s- %s' % ('  ' * inherit_depth, text_to_md(classname)))
             item_md.append('')
 
         inherited_members = item.get('inheritedMembers')
         if inherited_members is not None:
             item_md.append('Inherited Members:')
             for member in inherited_members:
-                item_md.append('- ' + member)
+                item_md.append('- ' + text_to_md(member))
             item_md.append('')
 
         if item_type == TYPE_CLASS:
             namespace = item.get('namespace')
             if namespace is not None:
-                item_md.append('Namespace: ' + namespace)
+                item_md.append('Namespace: ' + text_to_md(namespace))
                 item_md.append('')
 
             assemblies = item.get('assemblies')
             if assemblies is not None:
                 item_md.append('Assembly:')
                 for asm in assemblies:
-                    item_md.append('- ' + asm)
+                    item_md.append('- ' + text_to_md(asm))
                 item_md.append('')
 
         syntax = item.get('syntax')
@@ -200,8 +207,8 @@ def docfx_to_md(data):
                     for param in parameters:
                         item_md.append('| %s | *%s* | %s |' % (
                             type_str(param['type']),
-                            param['id'],
-                            param.get('description', '').strip().replace('\n', '<br/>'),
+                            text_to_md(param['id']),
+                            html_to_md(param.get('description', '')).strip().replace('\n', '<br/>'),
                         ))
                 else:
                     item_md.append('| Type | Name |')
@@ -209,7 +216,7 @@ def docfx_to_md(data):
                     for param in parameters:
                         item_md.append('| %s | *%s* |' % (
                             type_str(param['type']),
-                            param['id'],
+                            text_to_md(param['id']),
                         ))
                 item_md.append('')
 
