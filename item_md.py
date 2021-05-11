@@ -121,7 +121,11 @@ class ItemMd:
         })
 
     def obj_str(self, string, **kwargs):
-        name = text_to_md(self.get_ident_name(string, **kwargs))
+        name = replace_strings(string, {
+            '{': '',
+            '}': '',
+        })
+        name = text_to_md(self.get_ident_name(name, **kwargs))
 
         try:
             identifier = name_parser.parse(string)
