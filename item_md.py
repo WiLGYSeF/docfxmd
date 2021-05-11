@@ -129,6 +129,8 @@ class ItemMd:
             md_list.append(self.namespace())
             md_list.append(self.assemblies())
         md_list.append(self.syntax())
+        md_list.append(self.parameters())
+        md_list.append(self.return_())
         md_list.append(self.remarks())
 
         return '\n'.join(filter(lambda x: x is not None, md_list))
@@ -294,13 +296,4 @@ class ItemMd:
         result += '\n```%s\n' % lang
         result += syntax[content_key]
         result += '\n```\n\n'
-
-        parameters = self.parameters()
-        if parameters is not None:
-            result += parameters
-
-        return_result = self.return_()
-        if return_result is not None:
-            result += return_result
-
-        return result + '\n'
+        return result
