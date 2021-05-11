@@ -8,6 +8,8 @@ from convert import text_to_md
 
 TYPE_NAMESPACE = 'namespace'
 TYPE_CLASS = 'class'
+TYPE_STRUCT = 'struct'
+TYPE_INTERFACE = 'interface'
 TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
@@ -131,6 +133,10 @@ class DocfxMd:
         if class_view:
             if item.type == TYPE_CLASS:
                 return '## Class %s\n\n' % text_to_md(item.name)
+            if item.type == TYPE_STRUCT:
+                return '## Struct %s\n\n' % text_to_md(item.name)
+            if item.type == TYPE_INTERFACE:
+                return '## Interface %s\n\n' % text_to_md(item.name)
             if item.type == TYPE_CONSTRUCTOR:
                 return '## Constructors\n\n'
             if item.type == TYPE_FIELD:
@@ -140,7 +146,7 @@ class DocfxMd:
             if item.type == TYPE_METHOD:
                 return '## **Methods**\n\n'
             if item.type == TYPE_ENUM:
-                return '## **Enums**\n\n'
+                return '## Enums %s\n\n' % text_to_md(item.name)
         else:
             if item.type == TYPE_CLASS:
                 return '## Classes\n\n'

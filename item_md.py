@@ -4,6 +4,8 @@ import name_parser
 
 TYPE_NAMESPACE = 'namespace'
 TYPE_CLASS = 'class'
+TYPE_STRUCT = 'struct'
+TYPE_INTERFACE = 'interface'
 TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
@@ -19,6 +21,8 @@ def build_index(arr):
 TYPE_ORDER = build_index([
     TYPE_NAMESPACE,
     TYPE_CLASS,
+    TYPE_STRUCT,
+    TYPE_INTERFACE,
     TYPE_CONSTRUCTOR,
     TYPE_FIELD,
     TYPE_PROPERTY,
