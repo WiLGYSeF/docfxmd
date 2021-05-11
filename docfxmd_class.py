@@ -106,11 +106,10 @@ class DocfxMd:
             if header is not None:
                 result += header
 
-            name = ref.uid
-            link = name + '.md' if self.link_extensions else name
+            link = ref.uid + '.md' if self.link_extensions else ref.uid
 
             result += '### [%s](%s)\n\n' % (
-                text_to_md(ref.get_ident_name(name)),
+                text_to_md(ref.get_ident_name(ref.name)),
                 self.sanitize_link(link)
             )
             summary = ref.summary()
