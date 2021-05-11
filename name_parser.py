@@ -139,14 +139,16 @@ def _container(queue):
         token = queue.popleft()
         if token[0] != TOKEN_RPAREN:
             raise ValueError()
-        return idlist
+        return ('()', idlist)
 
     if token[0] == TOKEN_LBRACKET:
         idlist = _idlist(queue)
+        if idlist is None:
+            idlist = []
         token = queue.popleft()
         if token[0] != TOKEN_RBRACKET:
             raise ValueError()
-        return idlist
+        return ('[]', idlist)
 
     if token[0] == TOKEN_LT:
         idlist = _idlist(queue)
@@ -156,7 +158,7 @@ def _container(queue):
         token = queue.popleft()
         if token[0] != TOKEN_GT:
             raise ValueError()
-        return idlist
+        return ('<>', idlist)
 
     if token[0] == TOKEN_LBRACE:
         idlist = _idlist(queue)
@@ -174,12 +176,12 @@ def _container(queue):
             if token[0] != TOKEN_RBRACE:
                 raise ValueError()
 
-            idlist = '<%s>' % value
+            idlist = [[(value, None)]]
 
         token = queue.popleft()
         if token[0] != TOKEN_RBRACE:
             raise ValueError()
-        return idlist
+        return ('<>', idlist)
 
     queue.appendleft(token)
     return None

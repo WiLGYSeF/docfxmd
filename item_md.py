@@ -39,43 +39,75 @@ class ItemMd:
 
         self.type_order = TYPE_ORDER.get(self.type, 9999)
 
-    def obj_str(self, string, **kwargs):
+    def ident_str(self, ident, **kwargs):
         is_member = kwargs.get('is_member', False)
 
-        name = string
-        link = None
+        if is_member:
+            member = ident[-1]
+            ident = ident[:-1]
 
-        if name.startswith('Global.'):
-            name = string[7:]
+        result = ''
+        for segment in ident:
+            result += segment[0]
+            container = segment[1]
+            if container is not None:
+                link = self.docfx_md.get_link(result)
+                if link is not None:
+                    result = '[%s](%s)' % (self.escape_ident(result), link)
+
+                surround, idlist = container
+                result += surround[0]
+                result += ', '.join(map(lambda x: self.ident_str(x, **kwargs), idlist))
+                result += surround[1]
+            result += '.'
+        result = result[:-1]
+
+        link = self.docfx_md.get_link(result)
+        if is_member:
+            member_str = self.ident_str([member])
+            result += '.' + member_str
+            if link is not None:
+                link += '#' + self.replace_strings(member_str, {
+                    '.': '_',
+                    '(': '_',
+                    ')': '_',
+                })
+
+        if link is not None:
+            return '[%s](%s)' % (self.escape_ident(result), link)
+        return self.escape_ident(result)
+
+    def replace_strings(self, string, strings):
+        for key, val in strings.items():
+            string = string.replace(key, val)
+        return string
+
+    def escape_ident(self, string):
+        if string.startswith('Global.'):
+            string = string[7:]
         else:
             namespace = self.item['namespace']
             namespace_dot = namespace + '.'
-            if name.startswith(namespace_dot):
-                name = name[len(namespace_dot):]
-        name = name.replace('{', '&lt;').replace('}', '&gt;')
+            if string.startswith(namespace_dot):
+                string = string[len(namespace_dot):]
+        return self.replace_strings(string, {
+            '<': '&lt;',
+            '>': '&gt;',
+            '{': '&lt;',
+            '}': '&gt;',
+        })
+
+    def obj_str(self, string, **kwargs):
+        name = self.escape_ident(string)
 
         try:
             identifier = name_parser.parse(string)
-            if identifier is not None:
-                identifier = identifier[0]
-                if is_member:
-                    member = identifier[-1][0]
-                    identifier = identifier[:-1]
-
-                has_container = any(map(lambda x: x[1], identifier))
-
-                if has_container:
-                    pass
-                else:
-                    id_str = '.'.join(map(lambda x: x[0], identifier))
-                    link = self.docfx_md.get_link(id_str)
-                    if is_member:
-                        link += '#' + member
+            if identifier is None:
+                return name
+            return self.ident_str(identifier[0], **kwargs)
         except ValueError:
             pass
 
-        if link is not None:
-            return '[%s](%s)' % (name, link)
         return name
 
     def markdown(self):
