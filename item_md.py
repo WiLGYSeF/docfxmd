@@ -8,6 +8,7 @@ TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
 TYPE_METHOD = 'method'
+TYPE_ENUM = 'enum'
 
 def build_index(arr):
     index = {}
@@ -22,6 +23,7 @@ TYPE_ORDER = build_index([
     TYPE_FIELD,
     TYPE_PROPERTY,
     TYPE_METHOD,
+    TYPE_ENUM,
 ])
 
 LANG_CS = 'cs'

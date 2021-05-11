@@ -4,8 +4,6 @@ import os
 import pathlib
 import sys
 
-import yaml
-
 from docfxmd_class import DocfxMd
 
 
@@ -13,28 +11,31 @@ LINK_EXTENSIONS = False
 
 
 def build_directory(dname, output_name):
+    doc_md = DocfxMd(dname, link_extensions=LINK_EXTENSIONS)
+    paths = {}
+
     for root, dirs, files in os.walk(dname):
         for fname in files:
             if not fname.endswith('.yml'):
                 continue
 
-            in_path = os.path.join(root, fname)
-            path = pathlib.Path(in_path)
-            out_path = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
+            path = os.path.join(root, fname)
+            print('loading %s ...' % fname)
+            data = doc_md.load_file(path)
 
-            print(in_path)
-            doc_md = DocfxMd(root, link_extensions=LINK_EXTENSIONS)
-            result = doc_md.docfx_to_md(load_file(in_path))
-            if result is None:
-                continue
+            path = pathlib.Path(path)
+            paths[id(data)] = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
 
-            os.makedirs(out_path.parent, exist_ok=True)
-            with open(out_path.with_suffix('.md'), 'w', encoding='utf-8') as file:
-                file.write(result)
+    for basename, data in doc_md.files.items():
+        print(basename)
+        result = doc_md.docfx_to_md(data)
+        if result is None:
+            continue
 
-def load_file(fname):
-    with open(fname, 'r', encoding='utf-8') as file:
-        return yaml.load(file, Loader=yaml.Loader)
+        out_path = paths[id(data)]
+        os.makedirs(out_path.parent, exist_ok=True)
+        with open(out_path.with_suffix('.md'), 'w', encoding='utf-8') as file:
+            file.write(result)
 
 def main(args):
     build_directory('api', 'output')

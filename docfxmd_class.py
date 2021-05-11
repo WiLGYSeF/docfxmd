@@ -1,8 +1,9 @@
-import json
 import os
 
+import yaml
+
 from item_md import ItemMd
-from convert import html_to_md, text_to_md, text_to_md_table
+from convert import text_to_md
 
 
 TYPE_NAMESPACE = 'namespace'
@@ -11,6 +12,7 @@ TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
 TYPE_METHOD = 'method'
+TYPE_ENUM = 'enum'
 
 
 class DocfxMd:
@@ -18,6 +20,37 @@ class DocfxMd:
         self.root = root
 
         self.link_extensions = kwargs.get('link_extensions', True)
+
+        self.files = {}
+        self.items_by_file = {}
+        self.items = {}
+
+    def load_file(self, fname):
+        with open(fname, 'r', encoding='utf-8') as file:
+            data = yaml.load(file, Loader=yaml.Loader)
+
+        basename = os.path.basename(fname)
+        if basename.endswith('.yml'):
+            basename = basename[:-4]
+        self.files[basename] = data
+
+        if isinstance(data, dict):
+            items = sorted(map(lambda x: ItemMd(self, x), data.get('items')))
+            self.items_by_file[basename] = items
+
+            for itm in items:
+                self.items[itm.uid] = itm
+
+        return data
+
+    def docfx_file_to_md(self, fname):
+        basename = os.path.basename(fname)
+        if basename.endswith('.yml'):
+            basename = basename[:-4]
+
+        if basename not in self.files:
+            self.load_file(fname)
+        return self.docfx_to_md(self.files[basename])
 
     def docfx_to_md(self, data):
         if not isinstance(data, dict) or 'items' not in data:
@@ -29,24 +62,15 @@ class DocfxMd:
         type_headers = set()
 
         for item in items:
-            #print(json.dumps(item.item, indent=4))
-
             item_mdlist = []
 
             if item.type == TYPE_NAMESPACE:
                 item_mdlist.append(self.namespace_md(data))
             else:
-                if item.type not in type_headers:
-                    if item.type == TYPE_CLASS:
-                        item_mdlist.append('# Class %s' % text_to_md(item.name))
-                    elif item.type == TYPE_CONSTRUCTOR:
-                        item_mdlist.append('## Constructors')
-                    elif item.type == TYPE_FIELD:
-                        item_mdlist.append('## **Fields**')
-                    elif item.type == TYPE_PROPERTY:
-                        item_mdlist.append('## **Properties**')
-                    elif item.type == TYPE_METHOD:
-                        item_mdlist.append('## **Methods**')
+                header = self.item_header(item, type_headers)
+                if header is not None:
+                    item_mdlist.append(header)
+
                     item_mdlist.append('')
                     type_headers.add(item.type)
 
@@ -65,30 +89,71 @@ class DocfxMd:
     def namespace_md(self, namespace):
         item = namespace['items'][0]
         result = '# Namespace %s\n\n' % text_to_md(item['name'])
-        references = namespace['references']
+
+        references = []
+        ref_str = []
+
+        for ref in namespace['references']:
+            if ref['uid'] in self.items:
+                references.append(self.items[ref['uid']])
+            else:
+                ref_str.append(ref['uid'])
+
+        type_headers = set()
+        references.sort()
+
         for ref in references:
-            name = ref['uid']
+            if ref.type == TYPE_NAMESPACE:
+                continue
 
-            try:
-                # TODO: fix
-                import yaml
-                with open(os.path.join(self.root, name + '.yml'), 'r', encoding='utf-8') as file:
-                    obj = yaml.load(file, Loader=yaml.Loader)
-            except:
-                obj = None
+            header = self.item_header(ref, type_headers, class_view=False)
+            if header is not None:
+                result += header
 
-            result += '### [%s](%s)\n\n'% (name, name + '.md')
+            name = ref.uid
 
-            if obj is not None:
-                class_item = None
-                for item in obj['items']:
-                    if item['type'].lower() == TYPE_CLASS:
-                        class_item = item
-                        break
+            result += '### [%s](%s)\n\n' % (text_to_md(name), name + '.md')
+            summary = ref.summary()
+            if summary is not None:
+                result += summary
 
-                if class_item is not None:
-                    result += class_item.get('summary', '') + '\n'
+        for ref in ref_str:
+            result += '### %s\n\n' % ref
+
         return result
+
+    def item_header(self, item, header_set, class_view=True):
+        if item.type in header_set:
+            return None
+        header_set.add(item.type)
+
+        if class_view:
+            if item.type == TYPE_CLASS:
+                return '## Class %s\n\n' % text_to_md(item.name)
+            if item.type == TYPE_CONSTRUCTOR:
+                return '## Constructors\n\n'
+            if item.type == TYPE_FIELD:
+                return '## **Fields**\n\n'
+            if item.type == TYPE_PROPERTY:
+                return '## **Properties**\n\n'
+            if item.type == TYPE_METHOD:
+                return '## **Methods**\n\n'
+            if item.type == TYPE_ENUM:
+                return '## **Enums**\n\n'
+        else:
+            if item.type == TYPE_CLASS:
+                return '## Classes\n\n'
+            if item.type == TYPE_CONSTRUCTOR:
+                return '## Constructors\n\n'
+            if item.type == TYPE_FIELD:
+                return '## Fields\n\n'
+            if item.type == TYPE_PROPERTY:
+                return '## Properties\n\n'
+            if item.type == TYPE_METHOD:
+                return '## Methods\n\n'
+            if item.type == TYPE_ENUM:
+                return '## Enums\n\n'
+        return None
 
     def get_link(self, fname):
         path = os.path.join(self.root, fname + '.yml')
