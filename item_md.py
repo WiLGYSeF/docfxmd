@@ -80,6 +80,8 @@ class ItemMd:
         return self.get_ident_name(result)
 
     def get_ident_name(self, string):
+        string = string.replace('<', '&lt;').replace('>', '&gt;')
+
         if string.startswith('Global.'):
             return string[7:]
 
@@ -98,7 +100,7 @@ class ItemMd:
         })
 
     def obj_str(self, string, **kwargs):
-        name = self.get_ident_name(string)
+        name = text_to_md(self.get_ident_name(string))
 
         try:
             identifier = name_parser.parse(string)
