@@ -45,6 +45,7 @@ class ItemMd:
 
     def ident_str(self, ident, **kwargs):
         is_member = kwargs.get('is_member', False)
+        make_links = kwargs.get('make_links', True)
 
         if is_member:
             member = ident[-1]
@@ -57,9 +58,10 @@ class ItemMd:
             result += segment[0]
             container = segment[1]
             if container is not None:
-                link = self.docfx_md.get_link(result)
-                if link is not None:
-                    result = '[%s](%s)' % (self.get_ident_name(result), link)
+                if make_links:
+                    link = self.docfx_md.get_link(result)
+                    if link is not None:
+                        result = '[%s](%s)' % (self.get_ident_name(result), link)
 
                 surround, idlist = container
                 result += surround[0]
@@ -68,15 +70,16 @@ class ItemMd:
             result += '.'
         result = result[:-1]
 
-        link = self.docfx_md.get_link(result)
-        if is_member:
-            member_str = self.ident_str([member])
-            result += '.' + member_str
+        if make_links:
+            link = self.docfx_md.get_link(result)
+            if is_member:
+                member_str = self.ident_str([member], make_links=False)
+                result += '.' + member_str
+                if link is not None:
+                    link += '#' + self.escape_fragment(member_str)
             if link is not None:
-                link += '#' + self.escape_fragment(member_str)
+                return '[%s](%s)' % (self.get_ident_name(result), link)
 
-        if link is not None:
-            return '[%s](%s)' % (self.get_ident_name(result), link)
         return self.get_ident_name(result)
 
     def get_ident_name(self, string):
