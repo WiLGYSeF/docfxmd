@@ -15,6 +15,7 @@ def text_to_md(data):
     # TODO: better escapes
     result = replace_strings(data, {
         '#': r'\#',
+        '$': r'\$',
         '(': r'\(',
         ')': r'\)',
         '*': r'\*',
@@ -22,7 +23,9 @@ def text_to_md(data):
         '>': '&gt;',
         '^': r'\^',
         '_': r'\_',
+        '{': r'\{',
         '|': r'\|',
+        '}': r'\}',
     })
     return result
 

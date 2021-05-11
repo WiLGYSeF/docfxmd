@@ -113,10 +113,11 @@ class ItemMd:
     def escape_fragment(self, frag):
         return replace_strings(frag.lower(), {
             ' ': '-',
-            '.': '',
-            ',': '',
             '(': '',
             ')': '',
+            '.': '',
+            ',': '',
+            '`': '-',
         })
 
     def obj_str(self, string, **kwargs):

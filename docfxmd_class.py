@@ -3,7 +3,7 @@ import os
 import yaml
 
 from item_md import ItemMd
-from convert import html_to_md, text_to_md, newline_to_br
+from convert import replace_strings, html_to_md, text_to_md, newline_to_br
 
 
 TYPE_NAMESPACE = 'namespace'
@@ -109,7 +109,10 @@ class DocfxMd:
             name = ref.uid
             link = name + '.md' if self.link_extensions else name
 
-            result += '### [%s](%s)\n\n' % (text_to_md(ref.get_ident_name(name)), link)
+            result += '### [%s](%s)\n\n' % (
+                text_to_md(ref.get_ident_name(name)),
+                self.sanitize_link(link)
+            )
             summary = ref.summary()
             if summary is not None:
                 result += summary
@@ -202,6 +205,13 @@ class DocfxMd:
         path = os.path.join(self.root, fname + '.yml')
         if not os.path.isfile(path):
             return None
+
         if self.link_extensions:
             return fname + '.md'
         return fname
+
+    def sanitize_link(self, link):
+        return replace_strings(link, {
+            ' ': '-',
+            '`': '-',
+        })
