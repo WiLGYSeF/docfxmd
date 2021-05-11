@@ -14,8 +14,10 @@ TYPE_METHOD = 'method'
 
 
 class DocfxMd:
-    def __init__(self, root):
+    def __init__(self, root, **kwargs):
         self.root = root
+
+        self.link_extensions = kwargs.get('link_extensions', True)
 
     def docfx_to_md(self, data):
         if not isinstance(data, dict) or 'items' not in data:
@@ -92,4 +94,6 @@ class DocfxMd:
         path = os.path.join(self.root, fname + '.yml')
         if not os.path.isfile(path):
             return None
-        return fname + '.md'
+        if self.link_extensions:
+            return fname + '.md'
+        return fname

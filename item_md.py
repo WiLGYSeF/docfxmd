@@ -1,4 +1,4 @@
-from convert import html_to_md, text_to_md, text_to_md_table
+from convert import replace_strings, html_to_md, text_to_md, text_to_md_table
 import name_parser
 
 
@@ -48,6 +48,8 @@ class ItemMd:
             member = ident[-1]
             ident = ident[:-1]
 
+        # TODO: fix
+
         result = ''
         for segment in ident:
             result += segment[0]
@@ -69,20 +71,11 @@ class ItemMd:
             member_str = self.ident_str([member])
             result += '.' + member_str
             if link is not None:
-                link += '#' + self.replace_strings(member_str, {
-                    '.': '_',
-                    '(': '_',
-                    ')': '_',
-                })
+                link += '#' + self.escape_fragment(member_str)
 
         if link is not None:
             return '[%s](%s)' % (self.escape_ident(result), link)
-        return self.escape_ident(result)
-
-    def replace_strings(self, string, strings):
-        for key, val in strings.items():
-            string = string.replace(key, val)
-        return string
+        return result
 
     def escape_ident(self, string):
         if string.startswith('Global.'):
@@ -92,11 +85,20 @@ class ItemMd:
             namespace_dot = namespace + '.'
             if string.startswith(namespace_dot):
                 string = string[len(namespace_dot):]
-        return self.replace_strings(string, {
+        return text_to_md(replace_strings(string, {
             '<': '&lt;',
             '>': '&gt;',
             '{': '&lt;',
             '}': '&gt;',
+        }))
+
+    def escape_fragment(self, frag):
+        return replace_strings(frag.lower(), {
+            ' ': '-',
+            '.': '',
+            ',': '',
+            '(': '',
+            ')': '',
         })
 
     def obj_str(self, string, **kwargs):
@@ -160,7 +162,7 @@ class ItemMd:
         if inheritance is not None:
             result += 'Inheritance\n'
             for inherit in inheritance:
-                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.obj_str(inherit)))
+                result += '%s- %s\n' % ('  ' * inherit_depth, self.obj_str(inherit))
                 inherit_depth += 2
             result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.item['name']))
 
@@ -169,7 +171,7 @@ class ItemMd:
             if inherit_depth != 0:
                 inherit_depth += 2
             for classname in derived_classes:
-                result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.obj_str(classname)))
+                result += '%s- %s\n' % ('  ' * inherit_depth, self.obj_str(classname))
             result += '\n'
 
         return result if len(result) != 0 else None
@@ -181,7 +183,7 @@ class ItemMd:
 
         result = 'Inherited Members\n'
         for member in inherited_members:
-            result += '- ' + text_to_md(self.obj_str(member, is_member=True)) + '\n'
+            result += '- ' + self.obj_str(member, is_member=True) + '\n'
         return result + '\n'
 
     def namespace(self):
@@ -189,7 +191,7 @@ class ItemMd:
         if namespace is None:
             return None
 
-        return '**Namespace**: %s\n' % text_to_md(self.obj_str(namespace))
+        return '**Namespace**: %s\n' % self.obj_str(namespace)
 
     def parameters(self):
         if 'syntax' not in self.item:

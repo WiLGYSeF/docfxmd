@@ -8,6 +8,10 @@ import yaml
 
 from docfxmd_class import DocfxMd
 
+
+LINK_EXTENSIONS = False
+
+
 def build_directory(dname, output_name):
     for root, dirs, files in os.walk(dname):
         for fname in files:
@@ -19,7 +23,7 @@ def build_directory(dname, output_name):
             out_path = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
 
             print(in_path)
-            doc_md = DocfxMd(root)
+            doc_md = DocfxMd(root, link_extensions=LINK_EXTENSIONS)
             result = doc_md.docfx_to_md(load_file(in_path))
             if result is None:
                 continue

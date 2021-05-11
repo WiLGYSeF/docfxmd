@@ -6,15 +6,26 @@ TAG_CODE = 'code'
 TAG_REGEX = re.compile(r'<(/?)([A-Za-z]+)>')
 
 
+def replace_strings(string, strings):
+    for key, val in strings.items():
+        string = string.replace(key, val)
+    return string
+
 def text_to_md(data):
     # TODO: better escapes
-    result = data
-    result = result.replace('_', r'\_')
-    result = result.replace('*', r'\*')
+    result = replace_strings(data, {
+        '_': r'\_',
+        '*': r'\*',
+        '(': r'\(',
+        ')': r'\)',
+    })
     return result
 
 def text_to_md_table(data):
-    return text_to_md(data).strip().replace('\n', '<br/>').replace('|', r'\|')
+    return replace_strings(text_to_md(data).strip(), {
+        '\n': '<br/>',
+        '|': r'\|',
+    })
 
 def html_to_md(data):
     result = ''
