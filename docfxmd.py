@@ -27,7 +27,7 @@ def build_directory(dname, output_name):
             paths[id(data)] = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
 
     for basename, data in doc_md.files.items():
-        print(basename)
+        print('parsing %s' % basename)
         result = doc_md.docfx_to_md(data)
         if result is None:
             continue

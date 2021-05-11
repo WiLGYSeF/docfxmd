@@ -92,9 +92,19 @@ class ItemMd:
         if string.startswith('Global.'):
             return string[7:]
 
-        namespace = self.item['namespace']
-        if string.startswith(namespace + '.'):
-            return string[len(namespace) + 1:]
+        ns_parts = self.item['namespace'].split('.')
+        string_parts = string.split('.')
+
+        idx = 0
+        while idx < min(len(string_parts), len(ns_parts)):
+            if string_parts[idx] != ns_parts[idx]:
+                break
+            idx += 1
+        if idx != 0:
+            if idx == len(string_parts):
+                idx -= 1
+            string = '.'.join(string_parts[idx:])
+
         return string
 
     def escape_fragment(self, frag):

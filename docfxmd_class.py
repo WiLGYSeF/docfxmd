@@ -140,7 +140,6 @@ class DocfxMd:
 
         while idx < len(items):
             item = items[idx]
-            print(item.item)
             if item.type != TYPE_FIELD:
                 result += item.markdown() + '\n'
                 idx += 1
@@ -151,7 +150,6 @@ class DocfxMd:
 
             while idx < len(items):
                 item = items[idx]
-                print(item.item)
                 if item.type != TYPE_FIELD:
                     idx -= 1
                     break
