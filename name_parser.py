@@ -63,7 +63,7 @@ segment = STR , [ container ] ;
 container = LPAREN , idlist , RPAREN
           | LBRACKET , [ idlist ] , RBRACKET
           | LT , idlist , GT
-          | LBRACE , idlist , RBRACE
+          | LBRACE , ( idlist | LBRACE , STR , RBRACE ) , RBRACE
           ;
 """
 
@@ -136,45 +136,51 @@ def _container(queue):
     if token[0] == TOKEN_LPAREN:
         idlist = _idlist(queue)
         if idlist is None:
-            queue.appendleft(token)
-            return None
+            raise ValueError()
 
         token = queue.popleft()
         if token[0] != TOKEN_RPAREN:
-            queue.appendleft(token)
-            return None
+            raise ValueError()
         return idlist
 
     if token[0] == TOKEN_LBRACKET:
         idlist = _idlist(queue)
         token = queue.popleft()
         if token[0] != TOKEN_RBRACKET:
-            queue.appendleft(token)
-            return None
+            raise ValueError()
         return idlist
 
     if token[0] == TOKEN_LT:
         idlist = _idlist(queue)
         if idlist is None:
-            queue.appendleft(token)
-            return None
+            raise ValueError()
 
         token = queue.popleft()
         if token[0] != TOKEN_GT:
-            queue.appendleft(token)
-            return None
+            raise ValueError()
         return idlist
 
     if token[0] == TOKEN_LBRACE:
         idlist = _idlist(queue)
         if idlist is None:
-            queue.appendleft(token)
-            return None
+            token = queue.popleft()
+            if token[0] != TOKEN_LBRACE:
+                raise ValueError()
+
+            token = queue.popleft()
+            if token[0] != TOKEN_STR:
+                raise ValueError()
+            value = token[1]
+
+            token = queue.popleft()
+            if token[0] != TOKEN_RBRACE:
+                raise ValueError()
+
+            idlist = '<%s>' % value
 
         token = queue.popleft()
         if token[0] != TOKEN_RBRACE:
-            queue.appendleft(token)
-            return None
+            raise ValueError()
         return idlist
 
     queue.appendleft(token)
