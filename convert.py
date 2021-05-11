@@ -14,18 +14,19 @@ def replace_strings(string, strings):
 def text_to_md(data):
     # TODO: better escapes
     result = replace_strings(data, {
-        '_': r'\_',
-        '*': r'\*',
+        '#': r'\#',
         '(': r'\(',
         ')': r'\)',
+        '*': r'\*',
+        '<': '&lt;',
+        '>': '&gt;',
+        '_': r'\_',
+        '|': r'\|',
     })
     return result
 
-def text_to_md_table(data):
-    return replace_strings(text_to_md(data).strip(), {
-        '\n': '<br/>',
-        '|': r'\|',
-    })
+def newline_to_br(data):
+    return data.strip().replace('\n', '<br/>')
 
 def html_to_md(data):
     result = ''

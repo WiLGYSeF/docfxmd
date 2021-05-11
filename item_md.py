@@ -1,4 +1,4 @@
-from convert import replace_strings, html_to_md, text_to_md, text_to_md_table
+from convert import replace_strings, html_to_md, text_to_md, newline_to_br
 import name_parser
 
 
@@ -37,7 +37,7 @@ class ItemMd:
         self.item = item
 
         self.uid = item['uid']
-        self.id = item['id']
+        self.id = item['id'] #pylint: disable=invalid-name
         self.name = item['name']
         self.type = item['type'].lower()
 
@@ -213,7 +213,7 @@ class ItemMd:
                 result += '| %s | *%s* | %s |\n' % (
                     self.obj_str(param['type']),
                     text_to_md(param['id']),
-                    html_to_md(text_to_md_table(param.get('description', ''))),
+                    newline_to_br(html_to_md(param.get('description', ''))),
                 )
         else:
             result += '\n| Type | Name |\n'
@@ -253,7 +253,7 @@ class ItemMd:
             result += '|---|---|\n'
             result += '| %s | %s |\n' % (
                 self.obj_str(return_result['type']),
-                html_to_md(text_to_md_table(return_result['description'])),
+                newline_to_br(html_to_md(return_result['description'])),
             )
         else:
             result += '\n| Type |\n'
