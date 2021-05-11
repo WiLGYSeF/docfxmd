@@ -15,14 +15,14 @@ def build_directory(dname, output_name):
                 continue
 
             in_path = os.path.join(root, fname)
+            path = pathlib.Path(in_path)
+            out_path = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
 
-            doc_md = DocfxMd()
+            print(in_path)
+            doc_md = DocfxMd(root)
             result = doc_md.docfx_to_md(load_file(in_path))
             if result is None:
                 continue
-
-            path = pathlib.Path(in_path)
-            out_path = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
 
             os.makedirs(out_path.parent, exist_ok=True)
             with open(out_path.with_suffix('.md'), 'w', encoding='utf-8') as file:

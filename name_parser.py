@@ -72,10 +72,8 @@ def parse(string):
 
     idlist = _idlist(tokens)
     if len(tokens) != 0:
-        print('=' * 16, idlist, tokens)
-    else:
-        #print(idlist)
-        pass
+        return None
+    return idlist
 
 def _idlist(queue):
     identifiers = []

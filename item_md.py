@@ -1,4 +1,5 @@
 from convert import html_to_md, text_to_md, text_to_md_table
+import name_parser
 
 
 TYPE_CLASS = 'class'
@@ -27,8 +28,10 @@ LANG = LANG_CS
 
 
 class ItemMd:
-    def __init__(self, item):
+    def __init__(self, docfx_md, item):
+        self.docfx_md = docfx_md
         self.item = item
+
         self.uid = item['uid']
         self.id = item['id']
         self.name = item['name']
@@ -36,14 +39,44 @@ class ItemMd:
 
         self.type_order = TYPE_ORDER.get(self.type, 9999)
 
-    def obj_str(self, string):
+    def obj_str(self, string, **kwargs):
+        is_member = kwargs.get('is_member', False)
 
-        if string.startswith('Global.'):
-            string = string[7:]
-        elif string.startswith(self.item['namespace']):
-            string = string[len(self.item['namespace']) + 1:]
+        name = string
+        link = None
 
-        return string.replace('{', '&lt;').replace('}', '&gt;')
+        if name.startswith('Global.'):
+            name = string[7:]
+        else:
+            namespace = self.item['namespace']
+            namespace_dot = namespace + '.'
+            if name.startswith(namespace_dot):
+                name = name[len(namespace_dot):]
+        name = name.replace('{', '&lt;').replace('}', '&gt;')
+
+        try:
+            identifier = name_parser.parse(string)
+            if identifier is not None:
+                identifier = identifier[0]
+                if is_member:
+                    member = identifier[-1][0]
+                    identifier = identifier[:-1]
+
+                has_container = any(map(lambda x: x[1], identifier))
+
+                if has_container:
+                    pass
+                else:
+                    id_str = '.'.join(map(lambda x: x[0], identifier))
+                    link = self.docfx_md.get_link(id_str)
+                    if is_member:
+                        link += '#' + member
+        except ValueError:
+            pass
+
+        if link is not None:
+            return '[%s](%s)' % (name, link)
+        return name
 
     def markdown(self):
         md_list = []
@@ -114,7 +147,7 @@ class ItemMd:
 
         result = 'Inherited Members\n'
         for member in inherited_members:
-            result += '- ' + text_to_md(self.obj_str(member)) + '\n'
+            result += '- ' + text_to_md(self.obj_str(member, is_member=True)) + '\n'
         return result + '\n'
 
     def namespace(self):
@@ -122,7 +155,7 @@ class ItemMd:
         if namespace is None:
             return None
 
-        return '**Namespace**: %s\n' % text_to_md(namespace)
+        return '**Namespace**: %s\n' % text_to_md(self.obj_str(namespace))
 
     def parameters(self):
         if 'syntax' not in self.item:

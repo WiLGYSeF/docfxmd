@@ -1,4 +1,5 @@
 import json
+import os
 
 from item_md import ItemMd
 from convert import html_to_md, text_to_md, text_to_md_table
@@ -12,20 +13,20 @@ TYPE_METHOD = 'method'
 
 
 class DocfxMd:
-    def __init__(self):
-        pass
+    def __init__(self, root):
+        self.root = root
 
     def docfx_to_md(self, data):
         if not isinstance(data, dict) or 'items' not in data:
             return None
 
         markdown = []
-        items = sorted(map(lambda x: ItemMd(x), data.get('items')))
+        items = sorted(map(lambda x: ItemMd(self, x), data.get('items')))
 
         type_headers = set()
 
         for item in items:
-            print(json.dumps(item.item, indent=4))
+            #print(json.dumps(item.item, indent=4))
 
             item_mdlist = []
 
@@ -54,3 +55,9 @@ class DocfxMd:
         for item in markdown:
             result += '\n'.join(item) + '\n'
         return result
+
+    def get_link(self, fname):
+        path = os.path.join(self.root, fname + '.yml')
+        if not os.path.isfile(path):
+            return None
+        return fname + '.md'
