@@ -201,6 +201,7 @@ class DocfxMd:
         }.get(item.type)
 
     def get_link(self, fname):
+        fname = self._sanitize_link(fname)
         path = os.path.join(self.root, fname + '.yml')
         if not os.path.isfile(path):
             return None
@@ -208,6 +209,11 @@ class DocfxMd:
         if self.link_extensions:
             return fname + '.md'
         return fname
+
+    def _sanitize_link(self, link):
+        return replace_strings(link, {
+            '`': '-',
+        })
 
     def sanitize_link(self, link):
         return replace_strings(link, {
