@@ -77,7 +77,7 @@ class ItemMd:
 
         if link is not None:
             return '[%s](%s)' % (self.get_ident_name(result), link)
-        return result
+        return self.get_ident_name(result)
 
     def get_ident_name(self, string):
         if string.startswith('Global.'):
