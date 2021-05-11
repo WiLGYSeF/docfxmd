@@ -65,7 +65,7 @@ class ItemMd:
                 if make_links:
                     link = self.docfx_md.get_link(result)
                     if link is not None:
-                        result = '[%s](%s)' % (self.get_ident_name(result), link)
+                        result = '[%s](%s)' % (self.get_ident_name(result, **kwargs), link)
 
                 surround, idlist = container
                 result += surround[0]
@@ -82,28 +82,31 @@ class ItemMd:
                 if link is not None:
                     link += '#' + self.escape_fragment(member_str)
             if link is not None:
-                return '[%s](%s)' % (self.get_ident_name(result), link)
+                return '[%s](%s)' % (self.get_ident_name(result, **kwargs), link)
 
-        return self.get_ident_name(result)
+        return self.get_ident_name(result, **kwargs)
 
-    def get_ident_name(self, string):
+    def get_ident_name(self, string, **kwargs):
+        truncate_name = kwargs.get('truncate_name', True)
+
         string = string.replace('<', '&lt;').replace('>', '&gt;')
 
         if string.startswith('Global.'):
             return string[7:]
 
-        ns_parts = self.item['namespace'].split('.')
-        string_parts = string.split('.')
+        if truncate_name:
+            ns_parts = self.item['namespace'].split('.')
+            string_parts = string.split('.')
 
-        idx = 0
-        while idx < min(len(string_parts), len(ns_parts)):
-            if string_parts[idx] != ns_parts[idx]:
-                break
-            idx += 1
-        if idx != 0:
-            if idx == len(string_parts):
-                idx -= 1
-            string = '.'.join(string_parts[idx:])
+            idx = 0
+            while idx < min(len(string_parts), len(ns_parts)):
+                if string_parts[idx] != ns_parts[idx]:
+                    break
+                idx += 1
+            if idx != 0:
+                if idx == len(string_parts):
+                    idx -= 1
+                string = '.'.join(string_parts[idx:])
 
         return string
 
@@ -117,7 +120,7 @@ class ItemMd:
         })
 
     def obj_str(self, string, **kwargs):
-        name = text_to_md(self.get_ident_name(string))
+        name = text_to_md(self.get_ident_name(string, **kwargs))
 
         try:
             identifier = name_parser.parse(string)
@@ -130,11 +133,11 @@ class ItemMd:
         return name
 
     def markdown(self):
-        md_list = []
-
-        md_list.append(self.summary())
-        md_list.append(self.inheritance())
-        md_list.append(self.inherited_members())
+        md_list = [
+            self.summary(),
+            self.inheritance(),
+            self.inherited_members(),
+        ]
 
         if self.is_page_view():
             md_list.append(self.namespace())
@@ -218,7 +221,7 @@ class ItemMd:
         if namespace is None:
             return None
 
-        return '**Namespace**: %s\n' % self.obj_str(namespace)
+        return '**Namespace**: %s\n' % self.obj_str(namespace, truncate_name=False)
 
     def parameters(self):
         if 'syntax' not in self.item:
