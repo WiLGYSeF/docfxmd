@@ -59,7 +59,7 @@ class ItemMd:
             if container is not None:
                 link = self.docfx_md.get_link(result)
                 if link is not None:
-                    result = '[%s](%s)' % (self.escape_ident(result), link)
+                    result = '[%s](%s)' % (self.get_ident_name(result), link)
 
                 surround, idlist = container
                 result += surround[0]
@@ -76,23 +76,17 @@ class ItemMd:
                 link += '#' + self.escape_fragment(member_str)
 
         if link is not None:
-            return '[%s](%s)' % (self.escape_ident(result), link)
+            return '[%s](%s)' % (self.get_ident_name(result), link)
         return result
 
-    def escape_ident(self, string):
+    def get_ident_name(self, string):
         if string.startswith('Global.'):
-            string = string[7:]
-        else:
-            namespace = self.item['namespace']
-            namespace_dot = namespace + '.'
-            if string.startswith(namespace_dot):
-                string = string[len(namespace_dot):]
-        return text_to_md(replace_strings(string, {
-            '<': '&lt;',
-            '>': '&gt;',
-            '{': '&lt;',
-            '}': '&gt;',
-        }))
+            return string[7:]
+
+        namespace = self.item['namespace']
+        if string.startswith(namespace + '.'):
+            return string[len(namespace) + 1:]
+        return string
 
     def escape_fragment(self, frag):
         return replace_strings(frag.lower(), {
@@ -104,7 +98,7 @@ class ItemMd:
         })
 
     def obj_str(self, string, **kwargs):
-        name = self.escape_ident(string)
+        name = self.get_ident_name(string)
 
         try:
             identifier = name_parser.parse(string)
