@@ -5,6 +5,7 @@ from item_md import ItemMd
 from convert import html_to_md, text_to_md, text_to_md_table
 
 
+TYPE_NAMESPACE = 'namespace'
 TYPE_CLASS = 'class'
 TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
@@ -30,23 +31,26 @@ class DocfxMd:
 
             item_mdlist = []
 
-            if item.type not in type_headers:
-                if item.type == TYPE_CLASS:
-                    item_mdlist.append('# Class %s' % text_to_md(item.name))
-                elif item.type == TYPE_CONSTRUCTOR:
-                    item_mdlist.append('## Constructors')
-                elif item.type == TYPE_FIELD:
-                    item_mdlist.append('## **Fields**')
-                elif item.type == TYPE_PROPERTY:
-                    item_mdlist.append('## **Properties**')
-                elif item.type == TYPE_METHOD:
-                    item_mdlist.append('## **Methods**')
-                item_mdlist.append('')
-                type_headers.add(item.type)
+            if item.type == TYPE_NAMESPACE:
+                item_mdlist.append(self.namespace_md(data))
+            else:
+                if item.type not in type_headers:
+                    if item.type == TYPE_CLASS:
+                        item_mdlist.append('# Class %s' % text_to_md(item.name))
+                    elif item.type == TYPE_CONSTRUCTOR:
+                        item_mdlist.append('## Constructors')
+                    elif item.type == TYPE_FIELD:
+                        item_mdlist.append('## **Fields**')
+                    elif item.type == TYPE_PROPERTY:
+                        item_mdlist.append('## **Properties**')
+                    elif item.type == TYPE_METHOD:
+                        item_mdlist.append('## **Methods**')
+                    item_mdlist.append('')
+                    type_headers.add(item.type)
 
-            if item.type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
-                item_mdlist.append('### ' + text_to_md(item.name))
-                item_mdlist.append('')
+                if item.type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
+                    item_mdlist.append('### ' + text_to_md(item.name))
+                    item_mdlist.append('')
 
             item_mdlist.append(item.markdown())
             markdown.append(item_mdlist)
@@ -54,6 +58,34 @@ class DocfxMd:
         result = ''
         for item in markdown:
             result += '\n'.join(item) + '\n'
+        return result
+
+    def namespace_md(self, namespace):
+        item = namespace['items'][0]
+        result = '# Namespace %s\n\n' % text_to_md(item['name'])
+        references = namespace['references']
+        for ref in references:
+            name = ref['uid']
+
+            try:
+                # TODO: fix
+                import yaml
+                with open(os.path.join(self.root, name + '.yml'), 'r', encoding='utf-8') as file:
+                    obj = yaml.load(file, Loader=yaml.Loader)
+            except:
+                obj = None
+
+            result += '### [%s](%s)\n\n'% (name, name + '.md')
+
+            if obj is not None:
+                class_item = None
+                for item in obj['items']:
+                    if item['type'].lower() == TYPE_CLASS:
+                        class_item = item
+                        break
+
+                if class_item is not None:
+                    result += class_item.get('summary', '') + '\n'
         return result
 
     def get_link(self, fname):

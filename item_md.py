@@ -2,6 +2,7 @@ from convert import html_to_md, text_to_md, text_to_md_table
 import name_parser
 
 
+TYPE_NAMESPACE = 'namespace'
 TYPE_CLASS = 'class'
 TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
@@ -15,6 +16,7 @@ def build_index(arr):
     return index
 
 TYPE_ORDER = build_index([
+    TYPE_NAMESPACE,
     TYPE_CLASS,
     TYPE_CONSTRUCTOR,
     TYPE_FIELD,
