@@ -3,18 +3,18 @@ import os
 import yaml
 
 from item_md import ItemMd
-from convert import text_to_md
+from convert import html_to_md, text_to_md, newline_to_br
 
 
 TYPE_NAMESPACE = 'namespace'
 TYPE_CLASS = 'class'
 TYPE_STRUCT = 'struct'
 TYPE_INTERFACE = 'interface'
+TYPE_ENUM = 'enum'
 TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
 TYPE_METHOD = 'method'
-TYPE_ENUM = 'enum'
 
 
 class DocfxMd:
@@ -58,39 +58,33 @@ class DocfxMd:
         if not isinstance(data, dict) or 'items' not in data:
             return None
 
-        markdown = []
+        markdown = ''
         items = sorted(map(lambda x: ItemMd(self, x), data.get('items')))
 
         type_headers = set()
 
+        first_item = items[0]
+        if first_item.type == TYPE_NAMESPACE:
+            return self.namespace_md(data)
+        if first_item.type == TYPE_ENUM:
+            return self.enum_md(items)
+
         for item in items:
-            item_mdlist = []
+            header = self.item_header(item, type_headers)
+            if header is not None:
+                markdown += header
+                type_headers.add(item.type)
 
-            if item.type == TYPE_NAMESPACE:
-                item_mdlist.append(self.namespace_md(data))
-            else:
-                header = self.item_header(item, type_headers)
-                if header is not None:
-                    item_mdlist.append(header)
+            if item.type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
+                markdown += '### %s\n\n' % text_to_md(item.name)
 
-                    item_mdlist.append('')
-                    type_headers.add(item.type)
+            markdown += item.markdown()
 
-                if item.type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
-                    item_mdlist.append('### ' + text_to_md(item.name))
-                    item_mdlist.append('')
-
-            item_mdlist.append(item.markdown())
-            markdown.append(item_mdlist)
-
-        result = ''
-        for item in markdown:
-            result += '\n'.join(item) + '\n'
-        return result
+        return markdown
 
     def namespace_md(self, namespace):
-        item = namespace['items'][0]
-        result = '# Namespace %s\n\n' % text_to_md(item['name'])
+        item = ItemMd(self, namespace['items'][0])
+        result = self.item_header(item)
 
         references = []
         ref_str = []
@@ -120,47 +114,91 @@ class DocfxMd:
             if summary is not None:
                 result += summary
 
+        if len(ref_str) != 0:
+            result += '\n---\n'
+
         for ref in ref_str:
             result += '### %s\n\n' % ref
 
         return result
 
-    def item_header(self, item, header_set, class_view=True):
-        if item.type in header_set:
-            return None
-        header_set.add(item.type)
+    def enum_md(self, items):
+        enum_item = items[0]
+
+        md_list = [
+            self.item_header(enum_item),
+            enum_item.summary(),
+            enum_item.inheritance(),
+            enum_item.inherited_members(),
+            enum_item.namespace(),
+            enum_item.assemblies(),
+            enum_item.syntax(),
+        ]
+
+        result = ''
+        idx = 1
+
+        while idx < len(items):
+            item = items[idx]
+            print(item.item)
+            if item.type != TYPE_FIELD:
+                result += item.markdown() + '\n'
+                idx += 1
+                continue
+
+            result += '| Name | Description |\n'
+            result += '|---|---|\n'
+
+            while idx < len(items):
+                item = items[idx]
+                print(item.item)
+                if item.type != TYPE_FIELD:
+                    idx -= 1
+                    break
+
+                result += '| %s | %s |\n' % (
+                    text_to_md(item.name),
+                    newline_to_br(html_to_md(item.item.get('description', '&nbsp;')))
+                )
+                idx += 1
+
+            result += '\n'
+            idx += 1
+
+        md_list.append(result)
+        md_list.append(enum_item.remarks())
+
+        return '\n'.join(filter(lambda x: x is not None, md_list))
+
+    def item_header(self, item, header_set=None, class_view=True):
+        if header_set is not None:
+            if item.type in header_set:
+                return None
+            header_set.add(item.type)
 
         if class_view:
-            if item.type == TYPE_CLASS:
-                return '## Class %s\n\n' % text_to_md(item.name)
-            if item.type == TYPE_STRUCT:
-                return '## Struct %s\n\n' % text_to_md(item.name)
-            if item.type == TYPE_INTERFACE:
-                return '## Interface %s\n\n' % text_to_md(item.name)
-            if item.type == TYPE_CONSTRUCTOR:
-                return '## Constructors\n\n'
-            if item.type == TYPE_FIELD:
-                return '## **Fields**\n\n'
-            if item.type == TYPE_PROPERTY:
-                return '## **Properties**\n\n'
-            if item.type == TYPE_METHOD:
-                return '## **Methods**\n\n'
-            if item.type == TYPE_ENUM:
-                return '## Enums %s\n\n' % text_to_md(item.name)
-        else:
-            if item.type == TYPE_CLASS:
-                return '## Classes\n\n'
-            if item.type == TYPE_CONSTRUCTOR:
-                return '## Constructors\n\n'
-            if item.type == TYPE_FIELD:
-                return '## Fields\n\n'
-            if item.type == TYPE_PROPERTY:
-                return '## Properties\n\n'
-            if item.type == TYPE_METHOD:
-                return '## Methods\n\n'
-            if item.type == TYPE_ENUM:
-                return '## Enums\n\n'
-        return None
+            return {
+                TYPE_NAMESPACE: '# Namespace %s\n\n' % text_to_md(item.name),
+                TYPE_CLASS: '# Class %s\n\n' % text_to_md(item.name),
+                TYPE_STRUCT: '# Struct %s\n\n' % text_to_md(item.name),
+                TYPE_INTERFACE: '# Interface %s\n\n' % text_to_md(item.name),
+                TYPE_CONSTRUCTOR: '## Constructors\n\n',
+                TYPE_FIELD: '## **Fields**\n\n',
+                TYPE_PROPERTY: '## **Properties**\n\n',
+                TYPE_METHOD: '## **Methods**\n\n',
+                TYPE_ENUM: '# Enum %s\n\n' % text_to_md(item.name),
+            }.get(item.type)
+
+        return {
+            TYPE_CLASS: '## Classes\n\n',
+            TYPE_STRUCT: '## Structs\n\n',
+            TYPE_INTERFACE: '## Interfaces\n\n',
+            TYPE_CONSTRUCTOR: '## Constructors\n\n',
+            TYPE_FIELD: '## Fields\n\n',
+            TYPE_PROPERTY: '## Properties\n\n',
+            TYPE_METHOD: '## Methods\n\n',
+            TYPE_ENUM: '## Enums\n\n',
+        }.get(item.type)
 
     def get_link(self, fname):
         path = os.path.join(self.root, fname + '.yml')

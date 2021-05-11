@@ -6,11 +6,11 @@ TYPE_NAMESPACE = 'namespace'
 TYPE_CLASS = 'class'
 TYPE_STRUCT = 'struct'
 TYPE_INTERFACE = 'interface'
+TYPE_ENUM = 'enum'
 TYPE_CONSTRUCTOR = 'constructor'
 TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
 TYPE_METHOD = 'method'
-TYPE_ENUM = 'enum'
 
 def build_index(arr):
     index = {}
@@ -23,11 +23,11 @@ TYPE_ORDER = build_index([
     TYPE_CLASS,
     TYPE_STRUCT,
     TYPE_INTERFACE,
+    TYPE_ENUM,
     TYPE_CONSTRUCTOR,
     TYPE_FIELD,
     TYPE_PROPERTY,
     TYPE_METHOD,
-    TYPE_ENUM,
 ])
 
 LANG_CS = 'cs'
@@ -125,15 +125,25 @@ class ItemMd:
         md_list.append(self.summary())
         md_list.append(self.inheritance())
         md_list.append(self.inherited_members())
-        if self.type == TYPE_CLASS:
+
+        if self.is_page_view():
             md_list.append(self.namespace())
             md_list.append(self.assemblies())
+
         md_list.append(self.syntax())
         md_list.append(self.parameters())
         md_list.append(self.return_())
         md_list.append(self.remarks())
 
         return '\n'.join(filter(lambda x: x is not None, md_list))
+
+    def is_page_view(self):
+        return self.type in (
+            TYPE_CLASS,
+            TYPE_STRUCT,
+            TYPE_INTERFACE,
+            TYPE_ENUM,
+        )
 
     def __gt__(self, other):
         return self._cmp(other) > 0
@@ -218,7 +228,7 @@ class ItemMd:
                 result += '| %s | *%s* | %s |\n' % (
                     self.obj_str(param['type']),
                     text_to_md(param['id']),
-                    newline_to_br(html_to_md(param.get('description', ''))),
+                    newline_to_br(html_to_md(param.get('description', '&nbsp;'))),
                 )
         else:
             result += '\n| Type | Name |\n'
