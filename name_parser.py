@@ -56,8 +56,35 @@ def tokenize(string):
 
     return tokens
 
+def tostring(ident, **kwargs):
+    include_containers = kwargs.get('include_containers', True)
+    prepare_sub_ident = kwargs.get('prepare_sub_ident')
+    result = ''
+
+    def tostr_ident(val):
+        result = tostring(val, **kwargs)
+        if prepare_sub_ident is not None:
+            return prepare_sub_ident(result, val)
+        return result
+
+    for i in range(len(ident)):
+        segment_base, container = ident[i]
+        result += segment_base
+
+        if container is not None and include_containers:
+            surround, idlist = container
+            result += surround[0] + ', '.join(map(
+                tostr_ident,
+                idlist
+            )) + surround[1]
+
+        if i != len(ident) - 1:
+            result += '.'
+
+    return result
+
 """
-idlist = identifier , { COMMA , identifier} ;
+idlist = identifier , { COMMA , identifier } ;
 identifier = segment , { DOT , segment } ;
 segment = STR , [ container ] ;
 container = LPAREN , idlist , RPAREN

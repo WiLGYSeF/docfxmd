@@ -1,3 +1,4 @@
+import glob
 import os
 
 import yaml
@@ -204,7 +205,10 @@ class DocfxMd:
         fname = self._sanitize_link(fname)
         path = os.path.join(self.root, fname + '.yml')
         if not os.path.isfile(path):
-            return None
+            subname = glob.glob(os.path.join(self.root, fname + '-[0-9].yml'))
+            if len(subname) == 0:
+                return None
+            fname = subname[0][len(self.root) + 1 if len(self.root) != 0 else 0:-4]
 
         if self.link_extensions:
             return fname + '.md'

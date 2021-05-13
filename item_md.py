@@ -47,7 +47,7 @@ class ItemMd:
 
         self.type_order = TYPE_ORDER.get(self.type, 9999)
 
-    def ident_str(self, ident, **kwargs):
+    def _ident_str(self, ident, **kwargs):
         is_member = kwargs.get('is_member', False)
         make_links = kwargs.get('make_links', True)
 
@@ -55,34 +55,37 @@ class ItemMd:
             member = ident[-1]
             ident = ident[:-1]
 
-        # TODO: fix
-
-        result = ''
-        for segment in ident:
-            result += segment[0]
-            container = segment[1]
-            if container is not None:
-                if make_links:
-                    link = self.docfx_md.get_link(result)
-                    if link is not None:
-                        result = '[%s](%s)' % (self.get_ident_name(result, **kwargs), link)
-
-                surround, idlist = container
-                result += surround[0]
-                result += ', '.join(map(lambda x: self.ident_str(x, **kwargs), idlist))
-                result += surround[1]
-            result += '.'
-        result = result[:-1]
-
-        if make_links:
-            link = self.docfx_md.get_link(result)
+        if not make_links:
+            result = name_parser.tostring(
+                ident,
+                prepare_sub_ident=lambda x, y: self.get_ident_name(x, **kwargs)
+            )
             if is_member:
-                member_str = self.ident_str([member], make_links=False)
+                result += '.' + self.get_ident_name(member, **kwargs)
+            return result
+
+        result = name_parser.tostring(ident, include_containers=False)
+        link = self.docfx_md.get_link(result)
+        if link is not None:
+            result = name_parser.tostring(
+                ident,
+                prepare_sub_ident=lambda x, y: self.get_ident_name(x, **kwargs)
+            )
+            if is_member:
+                member_str = self._ident_str([member], make_links=False)
                 result += '.' + member_str
-                if link is not None:
-                    link += '#' + self.escape_fragment(member_str)
-            if link is not None:
-                return '[%s](%s)' % (self.get_ident_name(result, **kwargs), link)
+                link += '#' + self.escape_fragment(member_str)
+            return '[%s](%s)' % (text_to_md(self.get_ident_name(result, **kwargs)), link)
+
+        args = kwargs.copy()
+        args['is_member'] = False
+        result = name_parser.tostring(
+            ident,
+            prepare_sub_ident=lambda x, y: self._ident_str(y, **args)
+        )
+
+        if is_member:
+            result += '.' + self._ident_str([member], make_links=False)
 
         return self.get_ident_name(result, **kwargs)
 
@@ -121,21 +124,18 @@ class ItemMd:
         })
 
     def obj_str(self, string, **kwargs):
+        try:
+            identifier = name_parser.parse(string)
+            if identifier is not None:
+                return self._ident_str(identifier[0], **kwargs)
+        except ValueError:
+            pass
+
         name = replace_strings(string, {
             '{': '',
             '}': '',
         })
-        name = text_to_md(self.get_ident_name(name, **kwargs))
-
-        try:
-            identifier = name_parser.parse(string)
-            if identifier is None:
-                return name
-            return self.ident_str(identifier[0], **kwargs)
-        except ValueError:
-            pass
-
-        return name
+        return text_to_md(self.get_ident_name(name, **kwargs))
 
     def markdown(self):
         md_list = [
@@ -293,7 +293,7 @@ class ItemMd:
             result += '|---|\n'
             result += '| %s |\n' % self.obj_str(return_result['type'])
 
-        return result
+        return result + '\n'
 
     def summary(self):
         summary = self.item.get('summary')
