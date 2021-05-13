@@ -180,7 +180,7 @@ class DocfxMd:
 
         for name in sorted(self.namespaces.keys()):
             namespace = self.namespaces[name]
-            markdown += '## [%s](%s)\n\n' % (name, self.get_link(namespace.uid))
+            markdown += '## [%s](%s)\n\n' % (text_to_md(name), self.get_link(namespace.uid))
 
             summary = self.namespaces[name].summary()
             if summary is not None:
