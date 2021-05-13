@@ -22,6 +22,7 @@ class DocfxMd:
     def __init__(self, root, **kwargs):
         self.root = root
 
+        self.absolute_link_path = kwargs.get('absolute_link_path', '')
         self.link_extensions = kwargs.get('link_extensions', True)
 
         self.files = {}
@@ -210,8 +211,13 @@ class DocfxMd:
                 return None
             fname = subname[0][len(self.root) + 1 if len(self.root) != 0 else 0:-4]
 
+        if self.absolute_link_path is not None and len(self.absolute_link_path) != 0:
+            if self.absolute_link_path[-1] == '/':
+                fname = self.absolute_link_path + fname
+            else:
+                fname = '%s/%s' % (self.absolute_link_path, fname)
         if self.link_extensions:
-            return fname + '.md'
+            fname += '.md'
         return fname
 
     def _sanitize_link(self, link):

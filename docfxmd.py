@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import pathlib
 import sys
@@ -7,11 +8,16 @@ import sys
 from docfxmd_class import DocfxMd
 
 
-LINK_EXTENSIONS = False
+def build_directory(dname, output_name, **kwargs):
+    absolute_link_path = kwargs.get('absolute_link_path', '')
+    link_extensions = kwargs.get('link_extensions', False)
+    verbose = kwargs.get('verbose', 0)
 
-
-def build_directory(dname, output_name):
-    doc_md = DocfxMd(dname, link_extensions=LINK_EXTENSIONS)
+    doc_md = DocfxMd(
+        dname,
+        absolute_link_path=absolute_link_path,
+        link_extensions=link_extensions
+    )
     paths = {}
 
     for root, dirs, files in os.walk(dname):
@@ -20,14 +26,19 @@ def build_directory(dname, output_name):
                 continue
 
             path = os.path.join(root, fname)
-            print('loading %s ...' % fname)
+
+            if verbose >= 2:
+                print('loading %s ...' % fname)
+
             data = doc_md.load_file(path)
 
             path = pathlib.Path(path)
             paths[id(data)] = pathlib.Path(output_name) / path.relative_to(*path.parts[:1])
 
     for basename, data in doc_md.files.items():
-        print('parsing %s' % basename)
+        if verbose >= 1:
+            print('parsing %s' % basename)
+
         result = doc_md.docfx_to_md(data)
         if result is None:
             continue
@@ -38,7 +49,40 @@ def build_directory(dname, output_name):
             file.write(result)
 
 def main(args):
-    build_directory('api', 'output')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--dir',
+        action='store', metavar='DIR', required=True,
+        help='docfx api directory containing yml files'
+    )
+    parser.add_argument('-o', '--output',
+        action='store', metavar='DIR', required=True,
+        help='output markdown directory'
+    )
+    parser.add_argument('--link-extensions',
+        action='store_true', default=False,
+        help='append file extensions to links'
+    )
+    parser.add_argument('--no-link-extensions',
+        dest='link_extensions', action='store_false',
+        help='do not append file extensions to links (default)'
+    )
+    parser.add_argument('--abpath',
+        action='store', metavar='PATH',
+        help='set the absolute path prefix for links'
+    )
+    parser.add_argument('-v', '--verbose',
+        action='count',
+        help='verbose mode'
+    )
+    argspace = parser.parse_args(args[1:])
+
+    build_directory(
+        argspace.dir,
+        argspace.output,
+        absolute_link_path=argspace.abpath,
+        link_extensions=argspace.link_extensions,
+        verbose=argspace.verbose,
+    )
 
 
 if __name__ == '__main__':
