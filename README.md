@@ -5,7 +5,7 @@ The markdown output follows the docfx static html site format as closely as poss
 
 Usage:
 ```bash
-python3 docfxmd.py -d docfx_project/api -o output_wiki/
+python3 docfxmd.py -d docfx_project/api/ -o output_wiki/
 ```
 
 This script is proof-of-concept and has only been used to convert docfx output from C# source code to be hosted on Gitlab Wiki.
