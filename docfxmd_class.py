@@ -224,7 +224,15 @@ class DocfxMd:
             subname = glob.glob(os.path.join(self.root, fname + '-[0-9].yml'))
             if len(subname) == 0:
                 return None
-            fname = subname[0][len(self.root) + 1 if len(self.root) != 0 else 0:-4]
+
+            if len(self.root) != 0:
+                prefix = len(self.root)
+                if self.root[-1] != os.path.sep:
+                    prefix += 1
+            else:
+                prefix = 0
+
+            fname = subname[0][prefix:-4]
 
         if self.absolute_link_path is not None and len(self.absolute_link_path) != 0:
             if self.absolute_link_path[-1] == '/':
