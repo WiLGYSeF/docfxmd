@@ -99,7 +99,7 @@ def parse(string):
 
     idlist = _idlist(tokens)
     if len(tokens) != 0:
-        return None
+        raise ValueError()
     return idlist
 
 def _idlist(queue):
@@ -165,6 +165,8 @@ def _container(queue):
                 raise ValueError()
             idlist = on_none()
 
+        if len(queue) == 0:
+            raise ValueError()
         token = queue.popleft()
         if token[0] != close_token:
             raise ValueError()
