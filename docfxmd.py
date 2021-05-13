@@ -9,15 +9,10 @@ from docfxmd_class import DocfxMd
 
 
 def build_directory(dname, output_name, **kwargs):
-    absolute_link_path = kwargs.get('absolute_link_path', '')
-    link_extensions = kwargs.get('link_extensions', False)
+    namespace_index = kwargs.get('namespace_index')
     verbose = kwargs.get('verbose', 0)
 
-    doc_md = DocfxMd(
-        dname,
-        absolute_link_path=absolute_link_path,
-        link_extensions=link_extensions
-    )
+    doc_md = DocfxMd(dname, **kwargs)
     paths = {}
 
     for root, dirs, files in os.walk(dname):
@@ -48,6 +43,16 @@ def build_directory(dname, output_name, **kwargs):
         with open(out_path.with_suffix('.md'), 'w', encoding='utf-8') as file:
             file.write(result)
 
+    if namespace_index is not None:
+        if namespace_index[0] == os.path.sep:
+            namespace_index = namespace_index[1:]
+
+        path = os.path.join(output_name, namespace_index + '.md')
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        with open(path, 'w', encoding='utf-8') as file:
+            file.write(doc_md.namespace_index_md())
+
 def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dir',
@@ -57,6 +62,10 @@ def main(args):
     parser.add_argument('-o', '--output',
         action='store', metavar='DIR', required=True,
         help='output markdown directory'
+    )
+    parser.add_argument('--namespace',
+        action='store', metavar='PATH', nargs='?', default=False,
+        help='create an index of namespaces and store it in {OUTPUT}/{PATH}.md'
     )
     parser.add_argument('--link-extensions',
         action='store_true', default=False,
@@ -76,10 +85,15 @@ def main(args):
     )
     argspace = parser.parse_args(args[1:])
 
+    if argspace.namespace is not False:
+        if argspace.namespace is None:
+            argspace.namespace = '!Namespaces'
+
     build_directory(
         argspace.dir,
         argspace.output,
         absolute_link_path=argspace.abpath,
+        namespace_index=argspace.namespace,
         link_extensions=argspace.link_extensions,
         verbose=argspace.verbose,
     )

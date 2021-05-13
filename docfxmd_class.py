@@ -29,6 +29,8 @@ class DocfxMd:
         self.items_by_file = {}
         self.items = {}
 
+        self.namespaces = {}
+
     def load_file(self, fname):
         with open(fname, 'r', encoding='utf-8') as file:
             data = yaml.load(file, Loader=yaml.Loader)
@@ -67,6 +69,7 @@ class DocfxMd:
 
         first_item = items[0]
         if first_item.type == TYPE_NAMESPACE:
+            self.namespaces[first_item.name] = first_item
             return self.namespace_md(data)
         if first_item.type == TYPE_ENUM:
             return self.enum_md(items)
@@ -171,6 +174,18 @@ class DocfxMd:
         md_list.append(enum_item.remarks())
 
         return '\n'.join(filter(lambda x: x is not None, md_list))
+
+    def namespace_index_md(self):
+        markdown = '# Namespaces\n\n'
+
+        for name in sorted(self.namespaces.keys()):
+            namespace = self.namespaces[name]
+            markdown += '## [%s](%s)\n\n' % (name, self.get_link(namespace.uid))
+
+            summary = self.namespaces[name].summary()
+            if summary is not None:
+                markdown += summary
+        return markdown
 
     def item_header(self, item, header_set=None, class_view=True):
         if header_set is not None:
