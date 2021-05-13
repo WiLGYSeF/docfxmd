@@ -50,6 +50,8 @@ def tokenize(string):
             tokens.append( (TOKEN_LBRACE, None) )
         elif char == '}':
             tokens.append( (TOKEN_RBRACE, None) )
+        elif char == ' ':
+            pass
         else:
             raise ValueError('cannot parse name: ' + string)
         idx += 1
@@ -156,57 +158,43 @@ def _container(queue):
 
     token = queue.popleft()
 
+    def handle(close_token, wrapper, on_none=None):
+        idlist = _idlist(queue)
+        if idlist is None:
+            if on_none is None:
+                raise ValueError()
+            idlist = on_none()
+
+        token = queue.popleft()
+        if token[0] != close_token:
+            raise ValueError()
+        return (wrapper, idlist)
+
     if token[0] == TOKEN_LPAREN:
-        idlist = _idlist(queue)
-        if idlist is None:
-            raise ValueError()
-
-        token = queue.popleft()
-        if token[0] != TOKEN_RPAREN:
-            raise ValueError()
-        return ('()', idlist)
-
+        return handle(TOKEN_RPAREN, '()')
     if token[0] == TOKEN_LBRACKET:
-        idlist = _idlist(queue)
-        if idlist is None:
-            idlist = []
-        token = queue.popleft()
-        if token[0] != TOKEN_RBRACKET:
-            raise ValueError()
-        return ('[]', idlist)
-
+        return handle(TOKEN_RBRACKET, '[]', on_none=lambda: [])
     if token[0] == TOKEN_LT:
-        idlist = _idlist(queue)
-        if idlist is None:
+        return handle(TOKEN_GT, '<>')
+
+    def lbrace_or_idlist():
+        token = queue.popleft()
+        if token[0] != TOKEN_LBRACE:
             raise ValueError()
 
         token = queue.popleft()
-        if token[0] != TOKEN_GT:
+        if token[0] != TOKEN_STR:
             raise ValueError()
-        return ('<>', idlist)
-
-    if token[0] == TOKEN_LBRACE:
-        idlist = _idlist(queue)
-        if idlist is None:
-            token = queue.popleft()
-            if token[0] != TOKEN_LBRACE:
-                raise ValueError()
-
-            token = queue.popleft()
-            if token[0] != TOKEN_STR:
-                raise ValueError()
-            value = token[1]
-
-            token = queue.popleft()
-            if token[0] != TOKEN_RBRACE:
-                raise ValueError()
-
-            idlist = [[(value, None)]]
+        value = token[1]
 
         token = queue.popleft()
         if token[0] != TOKEN_RBRACE:
             raise ValueError()
-        return ('<>', idlist)
+
+        return [[(value, None)]]
+
+    if token[0] == TOKEN_LBRACE:
+        return handle(TOKEN_RBRACE, '<>', on_none=lbrace_or_idlist)
 
     queue.appendleft(token)
     return None
