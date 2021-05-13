@@ -32,7 +32,7 @@ def build_directory(dname, output_name, **kwargs):
 
     for basename, data in doc_md.files.items():
         if verbose >= 1:
-            print('parsing %s' % basename)
+            print('building %s' % basename)
 
         result = doc_md.docfx_to_md(data)
         if result is None:
@@ -40,6 +40,7 @@ def build_directory(dname, output_name, **kwargs):
 
         out_path = paths[id(data)]
         os.makedirs(out_path.parent, exist_ok=True)
+
         with open(out_path.with_suffix('.md'), 'w', encoding='utf-8') as file:
             file.write(result)
 

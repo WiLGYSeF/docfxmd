@@ -17,6 +17,17 @@ TYPE_FIELD = 'field'
 TYPE_PROPERTY = 'property'
 TYPE_METHOD = 'method'
 
+ITEM_HEADERS = {
+    TYPE_CLASS: '## Classes\n\n',
+    TYPE_STRUCT: '## Structs\n\n',
+    TYPE_INTERFACE: '## Interfaces\n\n',
+    TYPE_ENUM: '## Enums\n\n',
+    TYPE_CONSTRUCTOR: '## Constructors\n\n',
+    TYPE_FIELD: '## Fields\n\n',
+    TYPE_PROPERTY: '## Properties\n\n',
+    TYPE_METHOD: '## Methods\n\n',
+}
+
 
 class DocfxMd:
     def __init__(self, root, **kwargs):
@@ -79,9 +90,6 @@ class DocfxMd:
             if header is not None:
                 markdown += header
                 type_headers.add(item.type)
-
-            if item.type in (TYPE_CONSTRUCTOR, TYPE_FIELD, TYPE_PROPERTY, TYPE_METHOD):
-                markdown += '### %s\n\n' % text_to_md(item.name)
 
             markdown += item.markdown()
 
@@ -199,23 +207,14 @@ class DocfxMd:
                 TYPE_CLASS: '# Class %s\n\n' % text_to_md(item.name),
                 TYPE_STRUCT: '# Struct %s\n\n' % text_to_md(item.name),
                 TYPE_INTERFACE: '# Interface %s\n\n' % text_to_md(item.name),
+                TYPE_ENUM: '# Enum %s\n\n' % text_to_md(item.name),
                 TYPE_CONSTRUCTOR: '## Constructors\n\n',
                 TYPE_FIELD: '## **Fields**\n\n',
                 TYPE_PROPERTY: '## **Properties**\n\n',
                 TYPE_METHOD: '## **Methods**\n\n',
-                TYPE_ENUM: '# Enum %s\n\n' % text_to_md(item.name),
             }.get(item.type)
 
-        return {
-            TYPE_CLASS: '## Classes\n\n',
-            TYPE_STRUCT: '## Structs\n\n',
-            TYPE_INTERFACE: '## Interfaces\n\n',
-            TYPE_CONSTRUCTOR: '## Constructors\n\n',
-            TYPE_FIELD: '## Fields\n\n',
-            TYPE_PROPERTY: '## Properties\n\n',
-            TYPE_METHOD: '## Methods\n\n',
-            TYPE_ENUM: '## Enums\n\n',
-        }.get(item.type)
+        return ITEM_HEADERS.get(item.type)
 
     def get_link(self, fname):
         fname = self._sanitize_link(fname)

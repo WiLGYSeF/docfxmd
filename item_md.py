@@ -138,13 +138,16 @@ class ItemMd:
         return text_to_md(self.get_ident_name(name, **kwargs))
 
     def markdown(self):
-        md_list = [
-            self.summary(),
-            self.inheritance(),
-            self.inherited_members(),
-        ]
+        md_list = []
+
+        if self.is_member():
+            md_list.append('### %s\n' % text_to_md(self.name))
+
+        md_list.append(self.summary())
 
         if self.is_page_view():
+            md_list.append(self.inheritance())
+            md_list.append(self.inherited_members())
             md_list.append(self.namespace())
             md_list.append(self.assemblies())
 
@@ -154,6 +157,14 @@ class ItemMd:
         md_list.append(self.remarks())
 
         return '\n'.join(filter(lambda x: x is not None, md_list))
+
+    def is_member(self):
+        return self.type in (
+            TYPE_CONSTRUCTOR,
+            TYPE_FIELD,
+            TYPE_PROPERTY,
+            TYPE_METHOD
+        )
 
     def is_page_view(self):
         return self.type in (
