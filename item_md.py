@@ -123,7 +123,7 @@ class ItemMd:
             '`': '-',
         })
 
-    def obj_str(self, string, **kwargs):
+    def ident_str(self, string, **kwargs):
         try:
             identifier = name_parser.parse(string)
             if identifier is not None:
@@ -197,7 +197,7 @@ class ItemMd:
         if inheritance is not None:
             result += 'Inheritance\n'
             for inherit in inheritance:
-                result += '%s- %s\n' % ('  ' * inherit_depth, self.obj_str(inherit))
+                result += '%s- %s\n' % ('  ' * inherit_depth, self.ident_str(inherit))
                 inherit_depth += 2
             result += '%s- %s\n' % ('  ' * inherit_depth, text_to_md(self.item['name']))
 
@@ -206,7 +206,7 @@ class ItemMd:
             if inherit_depth != 0:
                 inherit_depth += 2
             for classname in derived_classes:
-                result += '%s- %s\n' % ('  ' * inherit_depth, self.obj_str(classname))
+                result += '%s- %s\n' % ('  ' * inherit_depth, self.ident_str(classname))
             result += '\n'
 
         return result if len(result) != 0 else None
@@ -218,7 +218,7 @@ class ItemMd:
 
         result = 'Inherited Members\n'
         for member in inherited_members:
-            result += '- ' + self.obj_str(member, is_member=True) + '\n'
+            result += '- ' + self.ident_str(member, is_member=True) + '\n'
         return result + '\n'
 
     def namespace(self):
@@ -226,7 +226,7 @@ class ItemMd:
         if namespace is None:
             return None
 
-        return '**Namespace**: %s\n' % self.obj_str(namespace, truncate_name=False)
+        return '**Namespace**: %s\n' % self.ident_str(namespace, truncate_name=False)
 
     def parameters(self):
         if 'syntax' not in self.item:
@@ -244,7 +244,7 @@ class ItemMd:
             result += '|---|---|---|\n'
             for param in parameters:
                 result += '| %s | *%s* | %s |\n' % (
-                    self.obj_str(param['type']),
+                    self.ident_str(param['type']),
                     text_to_md(param['id']),
                     newline_to_br(html_to_md(param.get('description', '&nbsp;'))),
                 )
@@ -253,7 +253,7 @@ class ItemMd:
             result += '|---|---|\n'
             for param in parameters:
                 result += '| %s | *%s* |\n' % (
-                    self.obj_str(param['type']),
+                    self.ident_str(param['type']),
                     text_to_md(param['id']),
                 )
 
@@ -285,13 +285,13 @@ class ItemMd:
             result += '\n| Type | Description |\n'
             result += '|---|---|\n'
             result += '| %s | %s |\n' % (
-                self.obj_str(return_result['type']),
+                self.ident_str(return_result['type']),
                 newline_to_br(html_to_md(return_result['description'])),
             )
         else:
             result += '\n| Type |\n'
             result += '|---|\n'
-            result += '| %s |\n' % self.obj_str(return_result['type'])
+            result += '| %s |\n' % self.ident_str(return_result['type'])
 
         return result + '\n'
 

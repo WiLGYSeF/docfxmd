@@ -59,6 +59,7 @@ def tokenize(string):
 def tostring(ident, **kwargs):
     include_containers = kwargs.get('include_containers', True)
     prepare_sub_ident = kwargs.get('prepare_sub_ident')
+
     result = ''
 
     def tostr_ident(val):
@@ -67,16 +68,13 @@ def tostring(ident, **kwargs):
             return prepare_sub_ident(result, val)
         return result
 
-    for i in range(len(ident)):
+    for i in range(len(ident)): #pylint: disable=consider-using-enumerate
         segment_base, container = ident[i]
         result += segment_base
 
         if container is not None and include_containers:
             surround, idlist = container
-            result += surround[0] + ', '.join(map(
-                tostr_ident,
-                idlist
-            )) + surround[1]
+            result += surround[0] + ', '.join(map(tostr_ident, idlist)) + surround[1]
 
         if i != len(ident) - 1:
             result += '.'
